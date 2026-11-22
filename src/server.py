@@ -152,6 +152,16 @@ def simulate_purchase(payload: PurchasePayload):
         "updated_recommendations": updated_recs
     }
 
+@app.post("/api/reset")
+def reset_dataset():
+    """Resets transactions to baseline and retrains SVD."""
+    global engine, metrics_cache
+    from src.generate_mock_data import generate_transactions
+    generate_transactions()
+    preprocess_pipeline()
+    metrics_cache = engine.train_and_evaluate()
+    return {"status": "success", "message": "Dataset reset to clean baseline."}
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))

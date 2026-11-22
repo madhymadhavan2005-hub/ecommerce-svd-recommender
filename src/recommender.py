@@ -134,22 +134,39 @@ class RecommenderEngine:
         if self.is_user_cold_start(customer_id):
             return self._cold_start_recommendations(customer_id, unpurchased, top_n)
 
-        # Warm User SVD Prediction
+        # Warm User SVD Prediction with Category Affinity Prior
         user_history = self.ratings_df[self.ratings_df["CustomerID"] == customer_id]
         top_purchased = user_history.sort_values(by="rating", ascending=False).iloc[0]
         top_sku = top_purchased["ProductID"]
         top_sku_meta = CATALOG.get(top_sku, {"name": top_sku, "category": "General"})
 
+        # Calculate category preference distribution from user history
+        category_weights = {}
+        for _, row in user_history.iterrows():
+            prod_info = CATALOG.get(str(row["ProductID"]))
+            if prod_info:
+                cat = prod_info["category"]
+                category_weights[cat] = category_weights.get(cat, 0.0) + float(row["rating"])
+        total_rating_mass = sum(category_weights.values()) or 1.0
+        category_affinity = {cat: w / total_rating_mass for cat, w in category_weights.items()}
+
         scored_items = []
         for pid in unpurchased:
             pred = self.algo.predict(customer_id, pid)
-            est_score = round(float(pred.est), 2)
-            match_pct = int(round(max(0, min(100, (est_score - 1.0) / 4.0 * 100))))
+            base_score = float(pred.est)
             prod_meta = CATALOG.get(pid, {"name": pid, "category": "General", "price": 0.0})
+            cat = prod_meta["category"]
+
+            # Hybrid score: Combine SVD latent score with user's category affinity boost
+            cat_boost = category_affinity.get(cat, 0.0) * 1.50
+            final_score = round(min(5.0, max(1.0, base_score + cat_boost)), 2)
+            match_pct = int(round(max(0, min(100, (final_score - 1.0) / 4.0 * 100))))
 
             # Explainable AI rationale
-            if prod_meta["category"] == top_sku_meta["category"]:
-                reason = f"High category affinity with your top purchase '{top_sku_meta['name']}' ({prod_meta['category']})."
+            if cat == top_sku_meta["category"]:
+                reason = f"High category affinity with your {cat} purchases (e.g. '{top_sku_meta['name']}')."
+            elif cat_boost > 0:
+                reason = f"Personalized category recommendation based on your interest in {cat}."
             else:
                 reason = f"Collaborative filtering peer affinity: shoppers with similar purchase patterns also bought this item."
 
@@ -158,7 +175,7 @@ class RecommenderEngine:
                 "name": prod_meta["name"],
                 "category": prod_meta["category"],
                 "price": prod_meta["price"],
-                "est_score": est_score,
+                "est_score": final_score,
                 "match_pct": match_pct,
                 "is_cold_start": False,
                 "reason": reason

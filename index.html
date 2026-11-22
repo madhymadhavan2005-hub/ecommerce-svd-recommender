@@ -791,22 +791,28 @@
                         // Check overlap with current user
                         const overlap = purchasedIds.some(pid => state.interactionMatrix[other.id][pid].qty > 0);
                         if (overlap) {
-                            peerBoost += 0.35;
+                            peerBoost += 0.25;
                             similarBuyerName = other.persona;
-                        } else {
-                            peerBoost += 0.12;
                         }
                     }
                 });
 
+                // Category affinity boost: strongly prioritize items matching user's purchased category
+                let categoryBoost = 0;
+                if (topAnchorProduct && product.category === topAnchorProduct.category) {
+                    categoryBoost = 0.70;
+                }
+
                 // Map into [1.50, 4.98] SVD predicted rating range
-                let rawPred = 1.65 + (dotProduct * 2.95) + peerBoost;
+                let rawPred = 1.65 + (dotProduct * 2.40) + categoryBoost + Math.min(0.35, peerBoost);
                 const estScore = Number(Math.min(4.98, Math.max(1.50, rawPred)).toFixed(2));
                 const matchPct = Math.min(99, Math.max(32, Math.round(((estScore - 1) / 4) * 100)));
 
                 // Craft explainable AI rationale
                 let reason = '';
-                if (dotProduct > 0.65 && topAnchorProduct) {
+                if (categoryBoost > 0 && topAnchorProduct) {
+                    reason = `High category affinity with your purchase of "${topAnchorProduct.name}" (${topAnchorProduct.category}).`;
+                } else if (dotProduct > 0.60 && topAnchorProduct) {
                     reason = `Strong latent factor affinity with your purchase of "${topAnchorProduct.name}" (${highestUserRating.toFixed(1)}★ normalized).`;
                 } else if (similarBuyerName) {
                     reason = `Collaborative match: Customers in the "${similarBuyerName}" cluster who shared items with you also purchased this.`;
@@ -836,6 +842,23 @@
                 const userItems = Object.values(state.interactionMatrix[c.id] || {}).filter(v => v.qty > 0);
                 const totalUnits = userItems.reduce((sum, item) => sum + item.qty, 0);
 
+                let personaText = c.persona;
+                let bioText = c.bio;
+                let avatarColor = c.avatarBg;
+                if (c.id === 'C004' && userItems.length > 0) {
+                    const topBoughtSku = Object.keys(state.interactionMatrix[c.id]).reduce((a, b) =>
+                        (state.interactionMatrix[c.id][a].qty > state.interactionMatrix[c.id][b].qty ? a : b)
+                    );
+                    const topProd = PRODUCTS.find(p => p.id === topBoughtSku);
+                    if (topProd) {
+                        personaText = `${topProd.category} (Personalized)`;
+                        bioText = `Purchased ${topProd.name}. SVD personalization active for ${topProd.category}!`;
+                        if (topProd.category.includes('Tech')) avatarColor = 'bg-indigo-100 text-indigo-700';
+                        else if (topProd.category.includes('Kitchen')) avatarColor = 'bg-amber-100 text-amber-700';
+                        else avatarColor = 'bg-emerald-100 text-emerald-700';
+                    }
+                }
+
                 return `
                     <button onclick="selectCustomer('${c.id}')"
                         class="text-left p-4 rounded-2xl border transition-all duration-150 flex flex-col justify-between ${
@@ -846,7 +869,7 @@
                         <div>
                             <div class="flex items-center justify-between gap-2 mb-2.5">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-xl ${c.avatarBg} flex items-center justify-center shrink-0">
+                                    <div class="w-9 h-9 rounded-xl ${avatarColor} flex items-center justify-center shrink-0">
                                         <i data-lucide="${c.icon}" class="w-4 h-4"></i>
                                     </div>
                                     <div>
@@ -854,12 +877,12 @@
                                             <span class="font-mono text-xs font-bold text-brand-600">${c.id}</span>
                                             <span class="text-xs font-bold text-slate-900">${c.name}</span>
                                         </div>
-                                        <div class="text-[11px] font-medium text-slate-500">${c.persona}</div>
+                                        <div class="text-[11px] font-medium text-slate-500">${personaText}</div>
                                     </div>
                                 </div>
                                 ${isSelected ? '<span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span>' : ''}
                             </div>
-                            <p class="text-xs text-slate-500 line-clamp-2 mb-3">${c.bio}</p>
+                            <p class="text-xs text-slate-500 line-clamp-2 mb-3">${bioText}</p>
                         </div>
                         <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
                             <span class="text-slate-500">Unique SKUs: <strong class="text-slate-800 font-mono">${userItems.length}</strong></span>
@@ -1221,6 +1244,14 @@
         }
 
         async function resetSimulation() {
+            if (isBackendConnected) {
+                try {
+                    await fetch('/api/reset', { method: 'POST' });
+                    await checkBackend();
+                } catch (e) {
+                    console.warn('Backend reset call error:', e);
+                }
+            }
             state.rawTransactions = JSON.parse(JSON.stringify(INITIAL_RAW_TRANSACTIONS));
             runDataPreparationPipeline();
             await refreshAllViews();
