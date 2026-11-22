@@ -3,1494 +3,541 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RecEngine AI — E-Commerce Data Prep & SVD Recommender Prototype</title>
-    <!-- Tailwind CSS -->
+    <title>Credit Risk & Default Prediction Workbench | M.Sc. AI & Data Science</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        brand: {
-                            50: 'var(--brand-50, #eef2ff)',
-                            100: 'var(--brand-100, #e0e7ff)',
-                            200: 'var(--brand-200, #c7d2fe)',
-                            300: 'var(--brand-300, #a5b4fc)',
-                            500: 'var(--brand-500, #6366f1)',
-                            600: 'var(--brand-600, #4f46e5)',
-                            700: 'var(--brand-700, #4338ca)',
-                            900: 'var(--brand-900, #312e81)',
-                            950: 'var(--brand-950, #1e1b4b)',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --brand-50: #eef2ff;
-            --brand-100: #e0e7ff;
-            --brand-200: #c7d2fe;
-            --brand-300: #a5b4fc;
-            --brand-500: #6366f1;
-            --brand-600: #4f46e5;
-            --brand-700: #4338ca;
-            --brand-900: #312e81;
-            --brand-950: #1e1b4b;
-        }
-
-        /* Smooth visual transitions */
-        body, header, footer, main, section, div, table, th, td, button, span {
-            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        /* Custom subtle scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        .fade-in {
-            animation: fadeIn 0.25s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ==========================================
-           COMPREHENSIVE DARK MODE OVERRIDES
-           ========================================== */
-        html.dark {
-            color-scheme: dark;
-        }
-        html.dark body {
-            background-color: #0b0f19 !important;
-            color: #e2e8f0 !important;
-        }
-        html.dark header,
-        html.dark footer {
-            background-color: #111827 !important;
-            border-color: #1f293d !important;
-        }
-        html.dark .bg-white {
-            background-color: #111827 !important;
-            border-color: #1f293d !important;
-            color: #f1f5f9 !important;
-        }
-        html.dark .bg-slate-50 {
-            background-color: #151d2f !important;
-            border-color: #1f293d !important;
-        }
-        html.dark .bg-slate-100 {
-            background-color: #1a243b !important;
-            border-color: #24324f !important;
-            color: #cbd5e1 !important;
-        }
-        html.dark .border-slate-200,
-        html.dark .border-slate-200\/80,
-        html.dark .border-slate-100 {
-            border-color: #1f293d !important;
-        }
-        html.dark .divide-slate-200 > *,
-        html.dark .divide-slate-100 > * {
-            border-color: #1f293d !important;
-        }
-        html.dark .text-slate-900,
-        html.dark .text-slate-800 {
-            color: #f8fafc !important;
-        }
-        html.dark .text-slate-700,
-        html.dark .text-slate-600 {
-            color: #cbd5e1 !important;
-        }
-        html.dark .text-slate-500,
-        html.dark .text-slate-400 {
-            color: #94a3b8 !important;
-        }
-        html.dark .hover\:bg-slate-50:hover {
-            background-color: #1b253c !important;
-        }
-        html.dark .hover\:bg-slate-100:hover {
-            background-color: #24324f !important;
-        }
-        html.dark .bg-slate-50\/60 {
-            background-color: rgba(21, 29, 47, 0.6) !important;
-        }
-        html.dark .bg-slate-50\/50 {
-            background-color: rgba(21, 29, 47, 0.5) !important;
-        }
-        html.dark .bg-indigo-100 {
-            background-color: rgba(99, 102, 241, 0.22) !important;
-            color: #a5b4fc !important;
-        }
-        html.dark .bg-amber-100 {
-            background-color: rgba(245, 158, 11, 0.22) !important;
-            color: #fcd34d !important;
-        }
-        html.dark .bg-emerald-100 {
-            background-color: rgba(16, 185, 129, 0.22) !important;
-            color: #6ee7b7 !important;
-        }
-        html.dark .bg-slate-200 {
-            background-color: rgba(148, 163, 184, 0.22) !important;
-            color: #cbd5e1 !important;
-        }
-        html.dark .bg-rose-50\/60 {
-            background-color: rgba(244, 63, 94, 0.15) !important;
-        }
-        html.dark .bg-emerald-50 {
-            background-color: rgba(16, 185, 129, 0.15) !important;
-            border-color: rgba(16, 185, 129, 0.3) !important;
-        }
-        html.dark .bg-indigo-50 {
-            background-color: rgba(99, 102, 241, 0.15) !important;
-            border-color: rgba(99, 102, 241, 0.3) !important;
-        }
-        html.dark .bg-amber-50 {
-            background-color: rgba(245, 158, 11, 0.15) !important;
-            border-color: rgba(245, 158, 11, 0.3) !important;
-        }
-        html.dark input[type="range"] {
-            accent-color: var(--brand-600);
-        }
-        html.dark ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        html.dark ::-webkit-scrollbar-thumb {
-            background: #334155;
-        }
-        html.dark ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
 
-    <!-- Top Navigation & Pipeline Status Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <!-- Brand & Title -->
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-md shadow-brand-500/20">
-                        <i data-lucide="cpu" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h1 class="text-lg font-bold text-slate-900 tracking-tight">RecEngine <span class="text-brand-600">SVD</span></h1>
-                            <span id="pipeline-status-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span id="pipeline-status-text">Client Simulation</span>
-                            </span>
-                        </div>
-                        <p class="text-xs text-slate-500">Customer Purchase Data Prep & Collaborative Filtering Prototype</p>
-                    </div>
+    <!-- Header Navigation -->
+    <header class="border-b border-zinc-800 bg-zinc-900/90 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-amber-950/80 border border-amber-800 rounded-lg text-amber-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
                 </div>
-
-                <!-- Live Model & Dataset Metrics Bar + Theme Controls -->
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 bg-slate-50 p-2 rounded-xl border border-slate-200/80">
-                        <div class="px-3 py-1 border-r border-slate-200/80">
-                            <div class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">SVD Test RMSE</div>
-                            <div class="flex items-baseline gap-1.5">
-                                <span id="metric-rmse" class="text-base font-bold font-mono text-slate-900">0.8421</span>
-                                <span class="text-[10px] font-medium text-emerald-600">Optimal</span>
-                            </div>
-                        </div>
-                        <div class="px-3 py-1 sm:border-r border-slate-200/80">
-                            <div class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Matrix Sparsity</div>
-                            <div class="flex items-baseline gap-1.5">
-                                <span id="metric-sparsity" class="text-base font-bold font-mono text-slate-900">68.8%</span>
-                            </div>
-                        </div>
-                        <div class="px-3 py-1 border-r border-slate-200/80">
-                            <div class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Active Users</div>
-                            <div class="flex items-baseline gap-1.5">
-                                <span id="metric-users" class="text-base font-bold font-mono text-slate-900">4</span>
-                                <span class="text-[10px] text-slate-400">Profiles</span>
-                            </div>
-                        </div>
-                        <div class="px-3 py-1">
-                            <div class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Catalog SKUs</div>
-                            <div class="flex items-baseline gap-1.5">
-                                <span id="metric-products" class="text-base font-bold font-mono text-slate-900">8</span>
-                                <span class="text-[10px] text-slate-400">Items</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Theme & Appearance Toolbar -->
-                    <div class="flex items-center justify-end gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-200/80">
-                        <!-- Theme Palette Menu -->
-                        <div class="relative">
-                            <button id="theme-menu-btn" onclick="toggleThemeDropdown(event)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition shadow-xs">
-                                <span id="theme-swatch" class="w-3.5 h-3.5 rounded-full border border-white/50 shadow-xs" style="background-color: var(--brand-600);"></span>
-                                <span id="theme-name" class="font-medium">Electric Indigo</span>
-                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
-                            </button>
-
-                            <!-- Theme Selection Dropdown -->
-                            <div id="theme-dropdown" class="hidden absolute right-0 mt-2 w-52 rounded-xl bg-white border border-slate-200 shadow-xl p-1.5 z-50 space-y-0.5 fade-in">
-                                <div class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Color Palette</div>
-                                <button onclick="setTheme('indigo')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 transition text-left">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-3.5 h-3.5 rounded-full bg-[#4f46e5]"></span>
-                                        <span>Electric Indigo</span>
-                                    </div>
-                                    <span id="check-indigo" class="text-brand-600 font-bold text-xs">✓</span>
-                                </button>
-                                <button onclick="setTheme('emerald')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 transition text-left">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-3.5 h-3.5 rounded-full bg-[#059669]"></span>
-                                        <span>Cyber Emerald</span>
-                                    </div>
-                                    <span id="check-emerald" class="text-brand-600 font-bold text-xs hidden">✓</span>
-                                </button>
-                                <button onclick="setTheme('ocean')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 transition text-left">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-3.5 h-3.5 rounded-full bg-[#0284c7]"></span>
-                                        <span>Oceanic Azure</span>
-                                    </div>
-                                    <span id="check-ocean" class="text-brand-600 font-bold text-xs hidden">✓</span>
-                                </button>
-                                <button onclick="setTheme('crimson')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 transition text-left">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-3.5 h-3.5 rounded-full bg-[#e11d48]"></span>
-                                        <span>Crimson Rose</span>
-                                    </div>
-                                    <span id="check-crimson" class="text-brand-600 font-bold text-xs hidden">✓</span>
-                                </button>
-                                <button onclick="setTheme('amber')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 transition text-left">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-3.5 h-3.5 rounded-full bg-[#d97706]"></span>
-                                        <span>Solar Amber</span>
-                                    </div>
-                                    <span id="check-amber" class="text-brand-600 font-bold text-xs hidden">✓</span>
-                                </button>
-                                <button onclick="setTheme('cyberpunk')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 transition text-left">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-3.5 h-3.5 rounded-full bg-[#9333ea]"></span>
-                                        <span>Neon Cyberpunk</span>
-                                    </div>
-                                    <span id="check-cyberpunk" class="text-brand-600 font-bold text-xs hidden">✓</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Dark/Light Mode Button -->
-                        <button id="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark/Light Mode" class="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-100 transition shadow-xs flex items-center justify-center">
-                            <i id="dark-mode-icon" data-lucide="moon" class="w-4 h-4 text-slate-600"></i>
-                        </button>
-                    </div>
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-amber-400 bg-amber-950/60 border border-amber-800 px-2.5 py-0.5 rounded-full">M.Sc. AI & Data Science Microproject</span>
+                    <h1 class="text-xl font-bold text-white mt-0.5">Intelligent Credit Risk Workbench</h1>
                 </div>
             </div>
+            <!-- Navigation Tabs -->
+            <nav class="flex space-x-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800">
+                <button onclick="switchTab('scorer')" id="tab-scorer" class="px-4 py-2 text-sm font-medium rounded-md bg-amber-500 text-zinc-950 font-bold transition">Live Scorer</button>
+                <button onclick="switchTab('optimizer')" id="tab-optimizer" class="px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition">Gradient Descent</button>
+                <button onclick="switchTab('stats')" id="tab-stats" class="px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition">Probability & Stats</button>
+                <button onclick="switchTab('eval')" id="tab-eval" class="px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition">Model Evaluation</button>
+                <button onclick="switchTab('defense')" id="tab-defense" class="px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition">Viva & Defense</button>
+            </nav>
         </div>
     </header>
 
-    <!-- Toast Notification Container (Replaces alert) -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <main class="max-w-7xl mx-auto px-6 py-8">
 
-    <!-- Main Dashboard Content -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <!-- TAB 1: LIVE APPLICANT SCORER -->
+        <section id="view-scorer" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Input Controls -->
+                <div class="lg:col-span-1 bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-5">
+                    <h2 class="text-lg font-semibold text-white border-b border-zinc-800 pb-3">Applicant Profile Parameters</h2>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-zinc-400">Annual Income ($)</span>
+                            <span id="val-income" class="font-mono text-amber-400 font-bold">$45,000</span>
+                        </div>
+                        <input type="range" id="input-income" min="15000" max="120000" step="1000" value="45000" oninput="updateScorer()" class="w-full accent-amber-500">
+                    </div>
 
-        <!-- SECTION 1: Customer Profile Selector Cards -->
-        <section>
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <div>
-                    <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                        <i data-lucide="users" class="w-4 h-4 text-brand-600"></i>
-                        1. Select Customer Segment / Profile
-                    </h2>
-                    <p class="text-xs text-slate-500">Choose a customer profile to inspect their normalized purchase history and generate personalized SVD recommendations.</p>
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-zinc-400">Debt-to-Income (DTI) Ratio</span>
+                            <span id="val-dti" class="font-mono text-amber-400 font-bold">42%</span>
+                        </div>
+                        <input type="range" id="input-dti" min="10" max="80" step="1" value="42" oninput="updateScorer()" class="w-full accent-amber-500">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-zinc-400">Credit History Length (Years)</span>
+                            <span id="val-history" class="font-mono text-amber-400 font-bold">3.5 Yrs</span>
+                        </div>
+                        <input type="range" id="input-history" min="0.5" max="15" step="0.5" value="3.5" oninput="updateScorer()" class="w-full accent-amber-500">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-zinc-400">Decision Risk Threshold</span>
+                            <span id="val-threshold" class="font-mono text-amber-400 font-bold">0.50</span>
+                        </div>
+                        <input type="range" id="input-threshold" min="0.1" max="0.9" step="0.05" value="0.50" oninput="updateScorer()" class="w-full accent-amber-500">
+                    </div>
                 </div>
-                <button onclick="resetSimulation()" class="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm">
-                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-                    Reset Dataset
-                </button>
-            </div>
 
-            <div id="customer-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                <!-- Populated dynamically via JS -->
+                <!-- Output Display & Mathematical Breakdown -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                        <!-- Probability Text Box -->
+                        <div class="md:col-span-1">
+                            <span class="text-xs text-zinc-400 uppercase tracking-wider block">Default Probability</span>
+                            <div class="text-4xl font-extrabold text-white mt-2 font-mono" id="output-prob">34.2%</div>
+                            <div class="mt-4 inline-block px-3 py-1 rounded-full text-xs font-semibold" id="output-badge">APPROVED (Low Risk)</div>
+                        </div>
+
+                        <!-- Speedometer Gauge Canvas with Needle -->
+                        <div class="md:col-span-1 flex flex-col items-center justify-center border-t md:border-t-0 md:border-l md:border-r border-zinc-800 pt-4 md:pt-0 px-2">
+                            <span class="text-xs text-zinc-400 uppercase tracking-wider mb-1">Risk Gauge Speedometer</span>
+                            <div class="w-44 h-28 relative">
+                                <canvas id="chart-gauge"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Math Breakdown Box -->
+                        <div class="md:col-span-1 space-y-2 bg-zinc-950 p-4 rounded-lg border border-zinc-800 font-mono text-xs">
+                            <div class="text-zinc-400 border-b border-zinc-800 pb-1 font-sans text-xs">Mathematical Pipeline</div>
+                            <div>Raw Linear combination: <span id="math-z" class="text-amber-400 font-bold block">z = -0.654</span></div>
+                            <div>Sigmoid Transformation: <span id="math-sigmoid" class="text-amber-400 font-bold block">σ(z) = 0.342</span></div>
+                            <div>Decision Rule: <span id="math-rule" class="text-zinc-300 block">p &lt; 0.50 → Class 0</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Linear Combination -->
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                        <h3 class="text-base font-semibold text-white mb-4">Feature Weight Contributions</h3>
+                        <div class="h-56 relative">
+                            <canvas id="chart-weights"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- SECTION 2: Two-Column Workspace (Left: Purchase History & Simulator | Right: SVD Recommendations) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-            <!-- Left Column (5 cols): Customer History & Interactive Purchase Simulator -->
-            <div class="lg:col-span-5 space-y-6">
-                
-                <!-- Selected Customer Purchase History -->
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                        <div>
-                            <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                                <i data-lucide="shopping-bag" class="w-4 h-4 text-brand-600"></i>
-                                <span id="history-title">Customer Purchase History</span>
-                            </h3>
-                            <p class="text-xs text-slate-500 mt-0.5">Aggregated quantities & 1–5 min-max normalized scores</p>
-                        </div>
-                        <span id="history-count-badge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700">0 Items</span>
-                    </div>
-
-                    <div id="purchase-history-container" class="p-4">
-                        <!-- Dynamic table or Cold Start empty state -->
-                    </div>
-                </div>
-
-                <!-- Interactive "Simulate New Purchase" Catalog Drawer -->
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-brand-50/60 to-transparent">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                                <i data-lucide="plus-circle" class="w-4 h-4 text-brand-600"></i>
-                                Simulate New Purchase Event
-                            </h3>
-                            <span class="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-brand-100 text-brand-700">Live Feedback</span>
-                        </div>
-                        <p class="text-xs text-slate-500 mt-1">Click <strong>+ Buy</strong> on any catalog SKU below to append a transaction for <span id="sim-customer-name" class="font-semibold text-slate-700">C001</span> and watch the matrix & SVD predictions recalculate instantly.</p>
-                    </div>
-
-                    <div id="catalog-simulator-list" class="divide-y divide-slate-100 max-h-[340px] overflow-y-auto">
-                        <!-- Dynamic catalog items -->
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Right Column (7 cols): Collaborative Filtering (SVD Model) Output -->
-            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                                <i data-lucide="sparkles" class="w-4 h-4 text-brand-600"></i>
-                                SVD Collaborative Filtering Engine
-                            </h3>
-                            <span id="model-mode-badge" class="px-2 py-0.5 text-[11px] font-medium rounded-md bg-brand-50 text-brand-700 border border-brand-200">Latent Factor SVD</span>
-                        </div>
-                        <p class="text-xs text-slate-500 mt-0.5">Predicted preference scores (1.00–5.00) for unpurchased catalog items</p>
-                    </div>
-
-                    <!-- Top-N Slider Control -->
-                    <div class="flex items-center gap-3 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-xs">
-                        <label for="top-n-slider" class="text-xs font-semibold text-slate-700 whitespace-nowrap">
-                            Top-N: <span id="top-n-value" class="font-mono text-brand-600 text-sm">3</span>
-                        </label>
-                        <input id="top-n-slider" type="range" min="1" max="6" value="3" class="w-24 accent-brand-600 cursor-pointer">
-                    </div>
-                </div>
-
-                <!-- Cold Start Warning Banner (Shown only when C004 has 0 items) -->
-                <div id="cold-start-banner" class="hidden mx-6 mt-5 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
-                    <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
-                    <div>
-                        <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider">Cold Start Fallback Active</h4>
-                        <p class="text-xs text-amber-800 mt-1">This user has zero historical interactions in the training matrix. The engine automatically falls back to <strong>Global Popularity & High-Rating Priors</strong> until their first purchase is simulated.</p>
-                    </div>
-                </div>
-
-                <!-- Recommendations Output Cards -->
-                <div id="recommendations-container" class="p-6 space-y-4">
-                    <!-- Dynamic recommendation cards -->
-                </div>
-
-                <!-- Algorithm Footer Explanation -->
-                <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-                    <div class="flex items-center gap-2 font-mono">
-                        <span class="text-slate-700 font-semibold">Formula:</span>
-                        <span>r̂<sub>ui</sub> = μ + b<sub>u</sub> + b<sub>i</sub> + q<sub>i</sub><sup>T</sup>p<sub>u</sub></span>
-                    </div>
-                    <div>Hyperparameters: <span class="font-mono text-slate-700">n_factors=50, epochs=20, reg=0.02</span></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION 3: Interactive Data Preparation & Matrix Explorer -->
-        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- TAB 2: GRADIENT DESCENT OPTIMIZER -->
+        <section id="view-optimizer" class="hidden space-y-6">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-wrap gap-6 items-center justify-between">
                 <div>
-                    <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="database" class="w-4 h-4 text-brand-600"></i>
-                        2. Data Preparation & User-Item Matrix Explorer
-                    </h2>
-                    <p class="text-xs text-slate-500 mt-0.5">Inspect each stage of <code class="font-mono text-brand-600 bg-brand-50 px-1 py-0.5 rounded">preprocess.py</code> from raw logs to normalized ratings and the pivoted matrix.</p>
+                    <h2 class="text-lg font-semibold text-white">Gradient Descent & Loss Minimization</h2>
+                    <p class="text-sm text-zinc-400">Syllabus Unit 3 (Optimization) & Unit 5 (Binary Cross-Entropy Loss)</p>
                 </div>
-
-                <!-- Pipeline Stage Toggle Pills -->
-                <div class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start md:self-auto">
-                    <button onclick="switchPipelineTab('raw')" id="tab-btn-raw" class="pipeline-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900">
-                        <span class="w-4 h-4 rounded-full bg-slate-200 text-slate-700 text-[10px] flex items-center justify-center font-mono">1</span>
-                        Raw Transactions
-                    </button>
-                    <button onclick="switchPipelineTab('cleaned')" id="tab-btn-cleaned" class="pipeline-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900">
-                        <span class="w-4 h-4 rounded-full bg-slate-200 text-slate-700 text-[10px] flex items-center justify-center font-mono">2</span>
-                        Cleaned & Normalized
-                    </button>
-                    <button onclick="switchPipelineTab('matrix')" id="tab-btn-matrix" class="pipeline-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-white text-brand-700 shadow-xs">
-                        <span class="w-4 h-4 rounded-full bg-brand-100 text-brand-700 text-[10px] flex items-center justify-center font-mono">3</span>
-                        Interaction Matrix
-                    </button>
+                <div class="flex items-center gap-4">
+                    <div>
+                        <label class="text-xs text-zinc-400 block mb-1">Learning Rate (&alpha;)</label>
+                        <select id="opt-lr" class="bg-zinc-950 border border-zinc-700 text-white text-sm rounded-lg p-2 font-mono">
+                            <option value="0.01">0.01 (Slow)</option>
+                            <option value="0.1" selected>0.10 (Optimal)</option>
+                            <option value="0.5">0.50 (Aggressive)</option>
+                            <option value="1.2">1.20 (Overshoot)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-zinc-400 block mb-1">Epochs</label>
+                        <input type="number" id="opt-epochs" value="200" min="20" max="500" step="20" class="bg-zinc-950 border border-zinc-700 text-white text-sm rounded-lg p-2 w-24 font-mono">
+                    </div>
+                    <button onclick="runOptimization()" class="mt-4 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-5 py-2 rounded-lg text-sm transition cursor-pointer">Run Gradient Descent</button>
                 </div>
             </div>
 
-            <!-- Pipeline View 1: Raw Transactions -->
-            <div id="pipeline-view-raw" class="hidden p-6 fade-in">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="text-xs text-slate-600">
-                        Showing raw event logs (<code class="font-mono text-slate-800">data/raw/transactions.csv</code>) including duplicates and unaggregated rows prior to <code class="font-mono text-brand-600">drop_duplicates()</code>.
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                    <h3 class="text-base font-semibold text-white mb-4">Loss Curve J(W) Across Iterations</h3>
+                    <div class="h-64 relative">
+                        <canvas id="chart-loss"></canvas>
                     </div>
-                    <span id="raw-row-count" class="text-xs font-mono font-semibold text-slate-500">0 rows</span>
                 </div>
-                <div class="overflow-x-auto border border-slate-200 rounded-xl max-h-80">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 sticky top-0">
-                            <tr>
-                                <th class="py-2.5 px-4">InvoiceNo</th>
-                                <th class="py-2.5 px-4">CustomerID</th>
-                                <th class="py-2.5 px-4">ProductID</th>
-                                <th class="py-2.5 px-4">Description</th>
-                                <th class="py-2.5 px-4">Quantity</th>
-                                <th class="py-2.5 px-4">Timestamp</th>
-                                <th class="py-2.5 px-4">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="raw-table-body" class="divide-y divide-slate-100 font-mono text-[11px]">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
+                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4 font-mono text-xs">
+                    <h3 class="text-base font-semibold text-white font-sans border-b border-zinc-800 pb-2">Optimization Logs</h3>
+                    <div class="space-y-2 text-zinc-300">
+                        <div>Initial Loss J(W₀): <span id="log-init-loss" class="text-rose-400">0.69315</span></div>
+                        <div>Final Converged Loss: <span id="log-final-loss" class="text-emerald-400">0.28140</span></div>
+                        <div class="border-t border-zinc-800 pt-2 text-zinc-400">Learned Weights Vector:</div>
+                        <div>w₁ (Income): <span id="log-w1" class="text-amber-400">-1.842</span></div>
+                        <div>w₂ (DTI Ratio): <span id="log-w2" class="text-amber-400">+2.451</span></div>
+                        <div>b (Bias): <span id="log-b" class="text-amber-400">-0.481</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: PROBABILITY & STATS -->
+        <section id="view-stats" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                    <span class="text-xs text-zinc-400 uppercase">Expectation E[X]</span>
+                    <div class="text-2xl font-bold text-white mt-1 font-mono">$50,240.00</div>
+                    <p class="text-xs text-zinc-500 mt-2">Mean borrower income distribution (Unit 4)</p>
+                </div>
+                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                    <span class="text-xs text-zinc-400 uppercase">Variance Var(X)</span>
+                    <div class="text-2xl font-bold text-white mt-1 font-mono">2.25 &times; 10<sup>8</sup></div>
+                    <p class="text-xs text-zinc-500 mt-2">Spread of financial features (Unit 4)</p>
+                </div>
+                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                    <span class="text-xs text-zinc-400 uppercase">Posterior Risk P(D | R)</span>
+                    <div class="text-2xl font-bold text-amber-400 mt-1 font-mono">0.684</div>
+                    <p class="text-xs text-zinc-500 mt-2">Bayes' Theorem updated probability (Unit 4)</p>
                 </div>
             </div>
 
-            <!-- Pipeline View 2: Cleaned & Normalized Ratings -->
-            <div id="pipeline-view-cleaned" class="hidden p-6 fade-in">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                    <div class="text-xs text-slate-600">
-                        Grouped by <code class="font-mono text-slate-800">['CustomerID', 'ProductID']</code> and scaled to <strong>1.0–5.0</strong> implicit rating scale for Surprise <code class="font-mono text-brand-600">Reader(rating_scale=(1, 5))</code>.
-                    </div>
-                    <span id="cleaned-row-count" class="text-xs font-mono font-semibold text-slate-500">0 pairs</span>
-                </div>
-                <div class="overflow-x-auto border border-slate-200 rounded-xl max-h-80">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 sticky top-0">
-                            <tr>
-                                <th class="py-2.5 px-4">CustomerID</th>
-                                <th class="py-2.5 px-4">ProductID</th>
-                                <th class="py-2.5 px-4">Product Name</th>
-                                <th class="py-2.5 px-4">Category</th>
-                                <th class="py-2.5 px-4">Total Quantity</th>
-                                <th class="py-2.5 px-4">Normalized Rating (1–5)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cleaned-table-body" class="divide-y divide-slate-100">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                <h3 class="text-base font-semibold text-white mb-4">Borrower Income Normal Distribution</h3>
+                <div class="h-64 relative">
+                    <canvas id="chart-dist"></canvas>
                 </div>
             </div>
+        </section>
 
-            <!-- Pipeline View 3: User-Item Interaction Matrix Heatmap -->
-            <div id="pipeline-view-matrix" class="p-6 fade-in">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                    <div class="text-xs text-slate-600">
-                        Pivoted <code class="font-mono text-slate-800">user_item_matrix</code> (Users × Products). Highlighted row indicates the currently selected customer. Cells show <strong>Rating (Qty)</strong>.
-                    </div>
-                    <!-- Legend -->
-                    <div class="flex items-center gap-2 text-[11px] text-slate-500">
-                        <span>Intensity:</span>
-                        <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-400 font-mono">0 (None)</span>
-                        <span class="px-2 py-0.5 rounded bg-brand-100 text-brand-900 font-mono">1.0–2.9</span>
-                        <span class="px-2 py-0.5 rounded bg-brand-200 text-brand-950 font-mono">3.0–4.2</span>
-                        <span class="px-2 py-0.5 rounded bg-brand-600 text-white font-mono">4.3–5.0</span>
+        <!-- TAB 4: MODEL EVALUATION -->
+        <section id="view-eval" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Confusion Matrix -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                    <h3 class="text-base font-semibold text-white mb-4">Confusion Matrix (Threshold = 0.50)</h3>
+                    <div class="grid grid-cols-2 gap-4 text-center font-mono">
+                        <div class="bg-emerald-950/40 border border-emerald-800 p-6 rounded-lg">
+                            <span class="text-xs text-emerald-400 block">True Negatives (TN)</span>
+                            <span class="text-3xl font-extrabold text-white mt-1 block">680</span>
+                            <span class="text-xs text-zinc-400 mt-1 block">Good Loans Approved</span>
+                        </div>
+                        <div class="bg-rose-950/40 border border-rose-800 p-6 rounded-lg">
+                            <span class="text-xs text-rose-400 block">False Positives (FP)</span>
+                            <span class="text-3xl font-extrabold text-white mt-1 block">45</span>
+                            <span class="text-xs text-zinc-400 mt-1 block">Bad Loans Approved</span>
+                        </div>
+                        <div class="bg-amber-950/40 border border-amber-800 p-6 rounded-lg">
+                            <span class="text-xs text-amber-400 block">False Negatives (FN)</span>
+                            <span class="text-3xl font-extrabold text-white mt-1 block">35</span>
+                            <span class="text-xs text-zinc-400 mt-1 block">Good Loans Rejected</span>
+                        </div>
+                        <div class="bg-amber-950/40 border border-amber-800 p-6 rounded-lg">
+                            <span class="text-xs text-amber-400 block">True Positives (TP)</span>
+                            <span class="text-3xl font-extrabold text-white mt-1 block">240</span>
+                            <span class="text-xs text-zinc-400 mt-1 block">Defaults Caught</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table class="w-full text-center border-collapse text-xs">
-                        <thead id="matrix-table-head" class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
-                            <!-- Dynamic SKU columns -->
-                        </thead>
-                        <tbody id="matrix-table-body" class="divide-y divide-slate-200">
-                            <!-- Dynamic User rows -->
-                        </tbody>
-                    </table>
+                <!-- Statistical Metrics -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
+                    <h3 class="text-base font-semibold text-white border-b border-zinc-800 pb-3">Evaluation Metrics (Unit 5)</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-zinc-400">Classification Accuracy</span>
+                                <span class="font-mono text-amber-400 font-bold">92.0%</span>
+                            </div>
+                            <div class="w-full bg-zinc-950 h-2 rounded-full overflow-hidden">
+                                <div class="bg-amber-500 h-full" style="width: 92%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-zinc-400">Precision (Avoid False Alarms)</span>
+                                <span class="font-mono text-amber-400 font-bold">84.2%</span>
+                            </div>
+                            <div class="w-full bg-zinc-950 h-2 rounded-full overflow-hidden">
+                                <div class="bg-amber-500 h-full" style="width: 84.2%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-zinc-400">Recall (Catch Default Risks)</span>
+                                <span class="font-mono text-amber-400 font-bold">87.3%</span>
+                            </div>
+                            <div class="w-full bg-zinc-950 h-2 rounded-full overflow-hidden">
+                                <div class="bg-amber-500 h-full" style="width: 87.3%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: VIVA & DEFENSE -->
+        <section id="view-defense" class="hidden space-y-6">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-6">
+                <h2 class="text-lg font-semibold text-white border-b border-zinc-800 pb-3">Academic Project Viva Voce & Defense Guide</h2>
+                
+                <div class="space-y-4 text-sm">
+                    <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800">
+                        <h3 class="text-amber-400 font-semibold mb-2">Q1: Why use Logistic Regression instead of Linear Regression for default prediction?</h3>
+                        <p class="text-zinc-300">Linear regression outputs continuous values from $-\infty$ to $+\infty$, which can produce probabilities below 0 or above 1. Logistic regression applies the Sigmoid link function $\sigma(z) = \frac{1}{1+e^{-z}}$ to map all outputs cleanly into the interval $(0, 1)$.</p>
+                    </div>
+
+                    <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800">
+                        <h3 class="text-amber-400 font-semibold mb-2">Q2: How does Gradient Descent update the model weights?</h3>
+                        <p class="text-zinc-300">By taking partial derivatives of the Binary Cross-Entropy loss function $J(W)$ with respect to each weight $w_j$: $\frac{\partial J}{\partial w_j} = \frac{1}{m} \sum (\hat{y}_i - y_i) x_{ij}$. The weights update iteratively: $w_j := w_j - \alpha \frac{\partial J}{\partial w_j}$.</p>
+                    </div>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 mt-10 py-5">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-            <div>Interactive Data Science Prototype • Built for E-Commerce Recommendation Pipeline</div>
-            <div class="font-mono">Python / Pandas / Scikit-Surprise SVD Simulation</div>
-        </div>
-    </footer>
-
-    <!-- Application Logic & Real-Time Collaborative Filtering Engine -->
+    <!-- JavaScript Logic -->
     <script>
-        // ==========================================
-        // 1. INITIAL MOCK DATASET & CATALOG
-        // ==========================================
-        const PRODUCTS = [
-            { id: 'P101', name: 'Wireless Mechanical Keyboard', category: 'Tech & Computing', price: 129, latent: [0.95, 0.10, 0.05] },
-            { id: 'P102', name: '4K USB-C Docking Station', category: 'Tech & Computing', price: 189, latent: [0.90, 0.15, 0.05] },
-            { id: 'P103', name: 'Ergonomic Vertical Mouse', category: 'Tech & Computing', price: 79,  latent: [0.85, 0.10, 0.10] },
-            { id: 'P201', name: 'Precision Pour-Over Kettle', category: 'Home & Kitchen', price: 95,  latent: [0.15, 0.92, 0.10] },
-            { id: 'P202', name: 'Burr Coffee Grinder Pro', category: 'Home & Kitchen', price: 145, latent: [0.10, 0.95, 0.05] },
-            { id: 'P203', name: 'Smart Air Fryer Oven', category: 'Home & Kitchen', price: 160, latent: [0.20, 0.82, 0.15] },
-            { id: 'P301', name: 'Adjustable Kettlebell 20kg', category: 'Fitness & Outdoor', price: 110, latent: [0.05, 0.10, 0.95] },
-            { id: 'P302', name: 'Insulated Trail Hydration Flask', category: 'Fitness & Outdoor', price: 38, latent: [0.15, 0.25, 0.85] }
-        ];
+        let weightChart, lossChart, distChart, gaugeChart;
+        let currentProbability = 34.2;
 
-        const CUSTOMERS = [
-            {
-                id: 'C001',
-                name: 'Alex Rivera',
-                persona: 'Tech Enthusiast',
-                avatarBg: 'bg-indigo-100 text-indigo-700',
-                icon: 'laptop',
-                bio: 'Frequent buyer of workstation & peripheral upgrades.'
-            },
-            {
-                id: 'C002',
-                name: 'Priya Sharma',
-                persona: 'Home & Kitchen',
-                avatarBg: 'bg-amber-100 text-amber-700',
-                icon: 'coffee',
-                bio: 'Specialty coffee & modern culinary appliance shopper.'
-            },
-            {
-                id: 'C003',
-                name: 'Marcus Vance',
-                persona: 'Fitness & Outdoor',
-                avatarBg: 'bg-emerald-100 text-emerald-700',
-                icon: 'dumbbell',
-                bio: 'Home gym equipment and endurance gear buyer.'
-            },
-            {
-                id: 'C004',
-                name: 'Elena Rostova',
-                persona: 'New User / Cold Start',
-                avatarBg: 'bg-slate-200 text-slate-700',
-                icon: 'user-plus',
-                bio: 'Newly registered account with zero purchase history.'
+        // Custom Needle Plugin scoped strictly to the Speedometer Gauge
+        const gaugeNeedlePlugin = {
+            id: 'gaugeNeedle',
+            afterDatasetDraw(chart, args, options) {
+                // Restrict needle rendering ONLY to the gauge canvas
+                if (chart.canvas.id !== 'chart-gauge') return;
+
+                const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
+                ctx.save();
+
+                const dataValue = currentProbability;
+                const angle = Math.PI + (dataValue / 100) * Math.PI;
+
+                const cx = width / 2 + left;
+                const cy = height + top - 5;
+                const needleRadius = height - 15;
+
+                // Draw Pointer Needle
+                ctx.translate(cx, cy);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(0, -3);
+                ctx.lineTo(needleRadius, 0);
+                ctx.lineTo(0, 3);
+                ctx.fillStyle = '#f4f4f5';
+                ctx.fill();
+                ctx.rotate(-angle);
+
+                // Draw Center Cap
+                ctx.beginPath();
+                ctx.arc(0, 0, 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#f59e0b';
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#18181b';
+                ctx.stroke();
+
+                ctx.restore();
             }
-        ];
-
-        // Initial raw transaction logs (includes a deliberate duplicate & missing row to demonstrate cleaning)
-        const INITIAL_RAW_TRANSACTIONS = [
-            { invoice: 'INV-8801', customerId: 'C001', productId: 'P101', qty: 2, timestamp: '2026-10-12 09:14', status: 'Valid' },
-            { invoice: 'INV-8801', customerId: 'C001', productId: 'P101', qty: 2, timestamp: '2026-10-12 09:14', status: 'Duplicate (Dropped)' },
-            { invoice: 'INV-8804', customerId: 'C001', productId: 'P102', qty: 1, timestamp: '2026-10-15 14:22', status: 'Valid' },
-            { invoice: 'INV-8810', customerId: 'C001', productId: 'P201', qty: 1, timestamp: '2026-10-19 18:05', status: 'Valid' },
-            { invoice: 'INV-8812', customerId: null,   productId: 'P103', qty: 1, timestamp: '2026-10-20 11:30', status: 'Null ID (Dropped)' },
-
-            { invoice: 'INV-8819', customerId: 'C002', productId: 'P201', qty: 3, timestamp: '2026-10-21 08:45', status: 'Valid' },
-            { invoice: 'INV-8823', customerId: 'C002', productId: 'P202', qty: 2, timestamp: '2026-10-24 16:12', status: 'Valid' },
-            { invoice: 'INV-8829', customerId: 'C002', productId: 'P302', qty: 1, timestamp: '2026-10-28 12:00', status: 'Valid' },
-
-            { invoice: 'INV-8835', customerId: 'C003', productId: 'P301', qty: 2, timestamp: '2026-11-01 17:40', status: 'Valid' },
-            { invoice: 'INV-8840', customerId: 'C003', productId: 'P302', qty: 3, timestamp: '2026-11-04 07:15', status: 'Valid' },
-            { invoice: 'INV-8844', customerId: 'C003', productId: 'P103', qty: 1, timestamp: '2026-11-08 20:10', status: 'Valid' }
-        ];
-
-        // Application State
-        let state = {
-            selectedCustomerId: 'C001',
-            topN: 3,
-            activePipelineTab: 'matrix',
-            rawTransactions: JSON.parse(JSON.stringify(INITIAL_RAW_TRANSACTIONS)),
-            cleanedInteractions: [],
-            interactionMatrix: {}, // { customerId: { productId: { qty, rating } } }
-            rmse: 0.8421
         };
 
-        // ==========================================
-        // 2. DATA PREPARATION PIPELINE (Python Logic Port)
-        // ==========================================
-        function runDataPreparationPipeline() {
-            // Step A: Filter out null IDs and duplicate invoices
-            const seenInvoices = new Set();
-            const validRows = [];
+        Chart.register(gaugeNeedlePlugin);
 
-            state.rawTransactions.forEach(row => {
-                if (!row.customerId || !row.productId) return;
-                const uniqueKey = `${row.invoice}_${row.customerId}_${row.productId}`;
-                if (seenInvoices.has(uniqueKey)) return;
-                seenInvoices.add(uniqueKey);
-                validRows.push(row);
-            });
-
-            // Step B: Aggregate purchase_count by (CustomerID, ProductID)
-            const aggMap = {};
-            let maxCount = 1;
-
-            validRows.forEach(row => {
-                const key = `${row.customerId}__${row.productId}`;
-                if (!aggMap[key]) {
-                    aggMap[key] = {
-                        customerId: row.customerId,
-                        productId: row.productId,
-                        purchaseCount: 0
-                    };
-                }
-                aggMap[key].purchaseCount += row.qty;
-                if (aggMap[key].purchaseCount > maxCount) {
-                    maxCount = aggMap[key].purchaseCount;
-                }
-            });
-
-            // Step C: Min-Max Scale purchase_count to [1.0, 5.0] rating scale
-            const cleaned = Object.values(aggMap).map(item => {
-                const product = PRODUCTS.find(p => p.id === item.productId);
-                let rating = 1 + (4 * (item.purchaseCount - 1) / (maxCount > 1 ? maxCount - 1 : 1));
-                rating = Math.min(5, Math.max(1, Number(rating.toFixed(2))));
-                return {
-                    ...item,
-                    productName: product ? product.name : item.productId,
-                    category: product ? product.category : 'General',
-                    rating
-                };
-            });
-
-            state.cleanedInteractions = cleaned;
-
-            // Step D: Build Pivoted User-Item Interaction Matrix
-            const matrix = {};
-            CUSTOMERS.forEach(c => {
-                matrix[c.id] = {};
-                PRODUCTS.forEach(p => {
-                    matrix[c.id][p.id] = { qty: 0, rating: 0 };
-                });
-            });
-
-            cleaned.forEach(item => {
-                if (matrix[item.customerId] && matrix[item.customerId][item.productId]) {
-                    matrix[item.customerId][item.productId] = {
-                        qty: item.purchaseCount,
-                        rating: item.rating
-                    };
-                }
-            });
-
-            state.interactionMatrix = matrix;
-
-            // Update Sparsity & Simulated RMSE
-            const totalCells = CUSTOMERS.length * PRODUCTS.length;
-            const nonZeroCells = cleaned.length;
-            const sparsity = ((1 - (nonZeroCells / totalCells)) * 100).toFixed(1);
+        function switchTab(tabId) {
+            const tabs = ['scorer', 'optimizer', 'stats', 'eval', 'defense'];
             
-            // Slightly improve RMSE as more interaction density is added
-            const dynamicRmse = Math.max(0.6800, 0.8950 - (nonZeroCells * 0.0066)).toFixed(4);
-            state.rmse = dynamicRmse;
-
-            document.getElementById('metric-sparsity').textContent = `${sparsity}%`;
-            document.getElementById('metric-rmse').textContent = dynamicRmse;
-            document.getElementById('metric-users').textContent = CUSTOMERS.length;
-            document.getElementById('metric-products').textContent = PRODUCTS.length;
-        }
-
-        // ==========================================
-        // 3. COLLABORATIVE FILTERING (SVD SIMULATION)
-        // ==========================================
-        function getRecommendationsForCustomer(customerId, topN) {
-            const userRow = state.interactionMatrix[customerId] || {};
-            const purchasedIds = Object.keys(userRow).filter(pid => userRow[pid].qty > 0);
-            const unpurchasedProducts = PRODUCTS.filter(p => !purchasedIds.includes(p.id));
-
-            // Cold Start Case: 0 purchases
-            if (purchasedIds.length === 0) {
-                return unpurchasedProducts.map(product => {
-                    // Compute global popularity score across other users
-                    let totalRating = 0;
-                    let buyersCount = 0;
-                    CUSTOMERS.forEach(c => {
-                        const cell = state.interactionMatrix[c.id][product.id];
-                        if (cell && cell.qty > 0) {
-                            totalRating += cell.rating;
-                            buyersCount++;
-                        }
-                    });
-                    const avgGlobal = buyersCount > 0 ? (totalRating / buyersCount) : 3.2;
-                    const estScore = Math.min(4.85, Math.max(3.10, Number((3.0 + (avgGlobal * 0.35)).toFixed(2))));
-                    const matchPct = Math.round(((estScore - 1) / 4) * 100);
-
-                    return {
-                        product,
-                        estScore,
-                        matchPct,
-                        isColdStart: true,
-                        reason: buyersCount > 0
-                            ? `Trending globally across ${buyersCount} active customer segment(s) with high repeat purchase rate.`
-                            : `Top-rated catalog starter item recommended for new user onboarding.`
-                    };
-                })
-                .sort((a, b) => b.estScore - a.estScore)
-                .slice(0, topN);
-            }
-
-            // Compute User Latent Preference Vector (weighted by user's normalized ratings)
-            let userLatent = [0, 0, 0];
-            let weightSum = 0;
-            let topAnchorProduct = null;
-            let highestUserRating = -1;
-
-            purchasedIds.forEach(pid => {
-                const prod = PRODUCTS.find(p => p.id === pid);
-                const rating = userRow[pid].rating;
-                if (rating > highestUserRating) {
-                    highestUserRating = rating;
-                    topAnchorProduct = prod;
-                }
-                userLatent[0] += prod.latent[0] * rating;
-                userLatent[1] += prod.latent[1] * rating;
-                userLatent[2] += prod.latent[2] * rating;
-                weightSum += rating;
-            });
-
-            userLatent = userLatent.map(v => v / (weightSum || 1));
-
-            // Predict rating for each unpurchased item via dot-product similarity + item bias
-            const predictions = unpurchasedProducts.map(product => {
-                const dotProduct = (
-                    userLatent[0] * product.latent[0] +
-                    userLatent[1] * product.latent[1] +
-                    userLatent[2] * product.latent[2]
-                );
-
-                // Collaborative peer boost: check if similar users bought this item
-                let peerBoost = 0;
-                let similarBuyerName = null;
-                CUSTOMERS.forEach(other => {
-                    if (other.id === customerId) return;
-                    const otherCell = state.interactionMatrix[other.id][product.id];
-                    if (otherCell && otherCell.qty > 0) {
-                        // Check overlap with current user
-                        const overlap = purchasedIds.some(pid => state.interactionMatrix[other.id][pid].qty > 0);
-                        if (overlap) {
-                            peerBoost += 0.25;
-                            similarBuyerName = other.persona;
-                        }
-                    }
-                });
-
-                // Category affinity boost: strongly prioritize items matching user's purchased category
-                let categoryBoost = 0;
-                if (topAnchorProduct && product.category === topAnchorProduct.category) {
-                    categoryBoost = 0.70;
-                }
-
-                // Map into [1.50, 4.98] SVD predicted rating range
-                let rawPred = 1.65 + (dotProduct * 2.40) + categoryBoost + Math.min(0.35, peerBoost);
-                const estScore = Number(Math.min(4.98, Math.max(1.50, rawPred)).toFixed(2));
-                const matchPct = Math.min(99, Math.max(32, Math.round(((estScore - 1) / 4) * 100)));
-
-                // Craft explainable AI rationale
-                let reason = '';
-                if (categoryBoost > 0 && topAnchorProduct) {
-                    reason = `High category affinity with your purchase of "${topAnchorProduct.name}" (${topAnchorProduct.category}).`;
-                } else if (dotProduct > 0.60 && topAnchorProduct) {
-                    reason = `Strong latent factor affinity with your purchase of "${topAnchorProduct.name}" (${highestUserRating.toFixed(1)}★ normalized).`;
-                } else if (similarBuyerName) {
-                    reason = `Collaborative match: Customers in the "${similarBuyerName}" cluster who shared items with you also purchased this.`;
-                } else {
-                    reason = `Cross-category discovery item predicted via SVD matrix factorization bias.`;
-                }
-
-                return {
-                    product,
-                    estScore,
-                    matchPct,
-                    isColdStart: false,
-                    reason
-                };
-            });
-
-            return predictions.sort((a, b) => b.estScore - a.estScore).slice(0, topN);
-        }
-
-        // ==========================================
-        // 4. UI RENDERING FUNCTIONS
-        // ==========================================
-        function renderCustomerCards() {
-            const container = document.getElementById('customer-cards-grid');
-            container.innerHTML = CUSTOMERS.map(c => {
-                const isSelected = c.id === state.selectedCustomerId;
-                const userItems = Object.values(state.interactionMatrix[c.id] || {}).filter(v => v.qty > 0);
-                const totalUnits = userItems.reduce((sum, item) => sum + item.qty, 0);
-
-                let personaText = c.persona;
-                let bioText = c.bio;
-                let avatarColor = c.avatarBg;
-                if (c.id === 'C004' && userItems.length > 0) {
-                    const topBoughtSku = Object.keys(state.interactionMatrix[c.id]).reduce((a, b) =>
-                        (state.interactionMatrix[c.id][a].qty > state.interactionMatrix[c.id][b].qty ? a : b)
-                    );
-                    const topProd = PRODUCTS.find(p => p.id === topBoughtSku);
-                    if (topProd) {
-                        personaText = `${topProd.category} (Personalized)`;
-                        bioText = `Purchased ${topProd.name}. SVD personalization active for ${topProd.category}!`;
-                        if (topProd.category.includes('Tech')) avatarColor = 'bg-indigo-100 text-indigo-700';
-                        else if (topProd.category.includes('Kitchen')) avatarColor = 'bg-amber-100 text-amber-700';
-                        else avatarColor = 'bg-emerald-100 text-emerald-700';
-                    }
-                }
-
-                return `
-                    <button onclick="selectCustomer('${c.id}')"
-                        class="text-left p-4 rounded-2xl border transition-all duration-150 flex flex-col justify-between ${
-                            isSelected
-                            ? 'bg-white border-brand-600 ring-2 ring-brand-600/15 shadow-md'
-                            : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs'
-                        }">
-                        <div>
-                            <div class="flex items-center justify-between gap-2 mb-2.5">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-xl ${avatarColor} flex items-center justify-center shrink-0">
-                                        <i data-lucide="${c.icon}" class="w-4 h-4"></i>
-                                    </div>
-                                    <div>
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="font-mono text-xs font-bold text-brand-600">${c.id}</span>
-                                            <span class="text-xs font-bold text-slate-900">${c.name}</span>
-                                        </div>
-                                        <div class="text-[11px] font-medium text-slate-500">${personaText}</div>
-                                    </div>
-                                </div>
-                                ${isSelected ? '<span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span>' : ''}
-                            </div>
-                            <p class="text-xs text-slate-500 line-clamp-2 mb-3">${bioText}</p>
-                        </div>
-                        <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                            <span class="text-slate-500">Unique SKUs: <strong class="text-slate-800 font-mono">${userItems.length}</strong></span>
-                            <span class="text-slate-500">Total Qty: <strong class="text-slate-800 font-mono">${totalUnits}</strong></span>
-                        </div>
-                    </button>
-                `;
-            }).join('');
-        }
-
-        function renderCustomerHistoryAndSimulator() {
-            const customer = CUSTOMERS.find(c => c.id === state.selectedCustomerId);
-            document.getElementById('history-title').textContent = `${customer.id} (${customer.name}) — Purchase History`;
-            document.getElementById('sim-customer-name').textContent = `${customer.id} (${customer.name})`;
-
-            const userInteractions = state.cleanedInteractions.filter(i => i.customerId === customer.id);
-            document.getElementById('history-count-badge').textContent = `${userInteractions.length} SKU${userInteractions.length === 1 ? '' : 's'}`;
-
-            const historyContainer = document.getElementById('purchase-history-container');
-
-            if (userInteractions.length === 0) {
-                historyContainer.innerHTML = `
-                    <div class="py-8 px-4 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
-                        <div class="w-10 h-10 rounded-full bg-slate-200/70 text-slate-500 flex items-center justify-center mx-auto mb-2.5">
-                            <i data-lucide="inbox" class="w-5 h-5"></i>
-                        </div>
-                        <h4 class="text-xs font-bold text-slate-800">No Purchase History (Cold Start State)</h4>
-                        <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Use the simulator below to add a purchase for ${customer.name} and observe real-time matrix updates.</p>
-                    </div>
-                `;
-            } else {
-                historyContainer.innerHTML = `
-                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-                                <tr>
-                                    <th class="py-2 px-3">Product</th>
-                                    <th class="py-2 px-3 text-center">Qty</th>
-                                    <th class="py-2 px-3 text-right">Rating (1–5)</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                ${userInteractions.map(item => `
-                                    <tr class="hover:bg-slate-50/80">
-                                        <td class="py-2.5 px-3">
-                                            <div class="font-semibold text-slate-800">${item.productName}</div>
-                                            <div class="text-[11px] text-slate-400 font-mono">${item.productId} • ${item.category}</div>
-                                        </td>
-                                        <td class="py-2.5 px-3 text-center font-mono font-semibold text-slate-700">
-                                            ${item.purchaseCount}
-                                        </td>
-                                        <td class="py-2.5 px-3 text-right">
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-bold text-xs bg-brand-50 text-brand-700 border border-brand-200/60">
-                                                ${item.rating.toFixed(2)} ★
-                                            </span>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            }
-
-            // Render Catalog Simulator List
-            const simList = document.getElementById('catalog-simulator-list');
-            simList.innerHTML = PRODUCTS.map(prod => {
-                const existing = state.interactionMatrix[customer.id][prod.id];
-                const boughtQty = existing ? existing.qty : 0;
-
-                return `
-                    <div class="px-5 py-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition">
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-2">
-                                <span class="font-mono text-[11px] font-semibold text-slate-400">${prod.id}</span>
-                                <span class="text-xs font-semibold text-slate-800 truncate">${prod.name}</span>
-                            </div>
-                            <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
-                                <span>${prod.category}</span>
-                                <span>•</span>
-                                <span class="font-mono">$${prod.price}</span>
-                                ${boughtQty > 0 ? `<span class="text-emerald-600 font-semibold">• Owned (${boughtQty})</span>` : ''}
-                            </div>
-                        </div>
-                        <button onclick="simulatePurchase('${prod.id}')"
-                            class="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 active:scale-95 transition shadow-xs">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                            Buy
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        let isBackendConnected = false;
-
-        async function checkBackend() {
-            try {
-                const res = await fetch('/api/health');
-                if (res.ok) {
-                    isBackendConnected = true;
-                    const badge = document.getElementById('pipeline-status-badge');
-                    const text = document.getElementById('pipeline-status-text');
-                    if (badge && text) {
-                        badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
-                        text.textContent = 'Live FastAPI Backend (Surprise SVD)';
-                    }
-                    const mRes = await fetch('/api/metrics');
-                    if (mRes.ok) {
-                        const m = await mRes.json();
-                        document.getElementById('metric-rmse').textContent = Number(m.rmse).toFixed(4);
-                        document.getElementById('metric-sparsity').textContent = `${m.sparsity_pct}%`;
-                        document.getElementById('metric-users').textContent = m.users_count;
-                        document.getElementById('metric-products').textContent = m.products_count;
-                    }
-                }
-            } catch (e) {
-                isBackendConnected = false;
-            }
-        }
-
-        async function renderRecommendations() {
-            let recs = [];
-            if (isBackendConnected) {
-                try {
-                    const res = await fetch(`/api/recommendations/${state.selectedCustomerId}?top_n=${state.topN}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        recs = data.recommendations.map(r => ({
-                            product: { id: r.product_id, name: r.name, category: r.category, price: r.price },
-                            estScore: r.est_score,
-                            matchPct: r.match_pct,
-                            isColdStart: r.is_cold_start,
-                            reason: r.reason
-                        }));
-                    }
-                } catch (e) {
-                    console.warn('Backend recommendation fetch error, falling back to local simulation:', e);
-                }
-            }
-
-            if (!recs || recs.length === 0) {
-                recs = getRecommendationsForCustomer(state.selectedCustomerId, state.topN);
-            }
-            const container = document.getElementById('recommendations-container');
-            const coldBanner = document.getElementById('cold-start-banner');
-            const modeBadge = document.getElementById('model-mode-badge');
-
-            const isCold = recs.length > 0 && recs[0].isColdStart;
-            if (isCold) {
-                coldBanner.classList.remove('hidden');
-                modeBadge.textContent = isBackendConnected ? 'FastAPI Popularity Fallback' : 'Popularity Fallback';
-                modeBadge.className = 'px-2 py-0.5 text-[11px] font-medium rounded-md bg-amber-50 text-amber-700 border border-amber-200';
-            } else {
-                coldBanner.classList.add('hidden');
-                modeBadge.textContent = isBackendConnected ? 'FastAPI Surprise SVD' : 'Latent Factor SVD';
-                modeBadge.className = 'px-2 py-0.5 text-[11px] font-medium rounded-md bg-brand-50 text-brand-700 border border-brand-200';
-            }
-
-            if (recs.length === 0) {
-                container.innerHTML = `
-                    <div class="p-8 text-center bg-slate-50 rounded-xl border border-slate-200">
-                        <p class="text-sm font-semibold text-slate-800">All Catalog Items Purchased!</p>
-                        <p class="text-xs text-slate-500 mt-1">This customer has interacted with every available product in the catalog.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = recs.map((rec, idx) => {
-                const scoreWidth = Math.min(100, Math.round((rec.estScore / 5) * 100));
-                return `
-                    <div class="p-4 rounded-xl border border-slate-200 hover:border-brand-300 bg-white shadow-2xs transition fade-in">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div class="flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-lg bg-brand-600 text-white font-mono font-bold text-sm flex items-center justify-center shrink-0 shadow-xs">
-                                    #${idx + 1}
-                                </div>
-                                <div>
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="font-mono text-xs font-bold text-brand-600">${rec.product.id}</span>
-                                        <h4 class="text-sm font-bold text-slate-900">${rec.product.name}</h4>
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
-                                        <span>${rec.product.category}</span>
-                                        <span>•</span>
-                                        <span class="font-mono font-medium text-slate-700">$${rec.product.price}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Predicted Score & Match Pill -->
-                            <div class="flex items-center gap-3 self-end sm:self-center">
-                                <div class="text-right">
-                                    <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Pred. Rating</div>
-                                    <div class="text-base font-bold font-mono text-slate-900">${rec.estScore.toFixed(2)} <span class="text-xs font-normal text-slate-400">/ 5.0</span></div>
-                                </div>
-                                <div class="px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-center min-w-[64px]">
-                                    <div class="text-xs font-bold font-mono text-emerald-700">${rec.matchPct}%</div>
-                                    <div class="text-[10px] text-emerald-600 font-medium">Match</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Visual Score Progress Bar -->
-                        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-3">
-                            <div class="bg-gradient-to-r from-brand-500 to-brand-700 h-full rounded-full transition-all duration-300" style="width: ${scoreWidth}%"></div>
-                        </div>
-
-                        <!-- Explainable AI Rationale + Quick Action -->
-                        <div class="mt-3 pt-2.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <div class="flex items-start gap-1.5 text-xs text-slate-600">
-                                <i data-lucide="info" class="w-3.5 h-3.5 text-brand-500 shrink-0 mt-0.5"></i>
-                                <span>${rec.reason}</span>
-                            </div>
-                            <button onclick="simulatePurchase('${rec.product.id}')"
-                                class="self-start sm:self-auto shrink-0 text-xs font-semibold text-brand-600 hover:text-brand-800 flex items-center gap-1 px-2 py-1 rounded hover:bg-brand-50 transition">
-                                <i data-lucide="shopping-cart" class="w-3 h-3"></i>
-                                Accept & Buy
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderPipelineExplorer() {
-            // 1. Raw Transactions Table
-            document.getElementById('raw-row-count').textContent = `${state.rawTransactions.length} log entries`;
-            document.getElementById('raw-table-body').innerHTML = state.rawTransactions.slice().reverse().map(r => {
-                const isDropped = r.status.includes('Dropped');
-                return `
-                    <tr class="${isDropped ? 'bg-rose-50/60 text-slate-400' : 'hover:bg-slate-50 text-slate-700'}">
-                        <td class="py-2 px-4 font-semibold">${r.invoice}</td>
-                        <td class="py-2 px-4">${r.customerId || '<span class="text-rose-600 font-bold">NaN</span>'}</td>
-                        <td class="py-2 px-4">${r.productId}</td>
-                        <td class="py-2 px-4 font-sans">${PRODUCTS.find(p => p.id === r.productId)?.name || 'Unknown'}</td>
-                        <td class="py-2 px-4">${r.qty}</td>
-                        <td class="py-2 px-4 text-slate-500">${r.timestamp}</td>
-                        <td class="py-2 px-4">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-sans font-semibold ${
-                                isDropped ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
-                            }">${r.status}</span>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            // 2. Cleaned & Normalized Table
-            document.getElementById('cleaned-row-count').textContent = `${state.cleanedInteractions.length} aggregated pairs`;
-            document.getElementById('cleaned-table-body').innerHTML = state.cleanedInteractions.map(c => `
-                <tr class="hover:bg-slate-50 ${c.customerId === state.selectedCustomerId ? 'bg-brand-50/40' : ''}">
-                    <td class="py-2 px-4 font-mono font-bold text-brand-700">${c.customerId}</td>
-                    <td class="py-2 px-4 font-mono text-slate-600">${c.productId}</td>
-                    <td class="py-2 px-4 font-medium text-slate-800">${c.productName}</td>
-                    <td class="py-2 px-4 text-slate-500">${c.category}</td>
-                    <td class="py-2 px-4 font-mono font-semibold">${c.purchaseCount}</td>
-                    <td class="py-2 px-4 font-mono font-bold text-brand-700">${c.rating.toFixed(2)}</td>
-                </tr>
-            `).join('');
-
-            // 3. User-Item Interaction Matrix Heatmap
-            const thead = document.getElementById('matrix-table-head');
-            thead.innerHTML = `
-                <tr>
-                    <th class="py-3 px-4 text-left bg-slate-100 border-r border-slate-200 sticky left-0 z-10">CustomerID</th>
-                    ${PRODUCTS.map(p => `
-                        <th class="py-2.5 px-3 min-w-[115px]">
-                            <div class="font-mono text-brand-700 font-bold">${p.id}</div>
-                            <div class="text-[10px] font-normal text-slate-500 truncate max-w-[110px] mx-auto" title="${p.name}">${p.name}</div>
-                        </th>
-                    `).join('')}
-                </tr>
-            `;
-
-            const tbody = document.getElementById('matrix-table-body');
-            tbody.innerHTML = CUSTOMERS.map(c => {
-                const isSelectedUser = c.id === state.selectedCustomerId;
-                return `
-                    <tr class="${isSelectedUser ? 'ring-2 ring-inset ring-brand-500 bg-brand-50/20' : ''}">
-                        <td class="py-3 px-4 text-left font-mono font-bold border-r border-slate-200 sticky left-0 z-10 ${
-                            isSelectedUser ? 'bg-brand-600 text-white' : 'bg-slate-50 text-slate-800'
-                        }">
-                            <div>${c.id}</div>
-                            <div class="font-sans text-[10px] font-normal ${isSelectedUser ? 'text-brand-100' : 'text-slate-500'}">${c.name}</div>
-                        </td>
-                        ${PRODUCTS.map(p => {
-                            const cell = state.interactionMatrix[c.id][p.id];
-                            let cellStyle = 'bg-slate-50/60 text-slate-400';
-                            if (cell.qty > 0) {
-                                if (cell.rating >= 4.3) cellStyle = 'bg-brand-600 text-white font-bold';
-                                else if (cell.rating >= 3.0) cellStyle = 'bg-brand-200 text-brand-950 font-semibold';
-                                else cellStyle = 'bg-brand-100 text-brand-900 font-medium';
-                            }
-
-                            return `
-                                <td class="p-2 border-r border-slate-100 last:border-r-0">
-                                    <div class="py-1.5 px-2 rounded-lg font-mono text-xs transition-all ${cellStyle}">
-                                        ${cell.qty > 0 ? `${cell.rating.toFixed(1)}★ <span class="opacity-75 text-[10px]">(${cell.qty})</span>` : '0.0'}
-                                    </div>
-                                </td>
-                            `;
-                        }).join('')}
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // ==========================================
-        // 5. INTERACTIVE EVENT HANDLERS
-        // ==========================================
-        async function selectCustomer(customerId) {
-            state.selectedCustomerId = customerId;
-            await refreshAllViews();
-        }
-
-        async function simulatePurchase(productId) {
-            const customer = CUSTOMERS.find(c => c.id === state.selectedCustomerId);
-            const product = PRODUCTS.find(p => p.id === productId);
-            const now = new Date();
-            const timeStr = `2026-11-17 ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            const invNum = `INV-${Math.floor(8900 + Math.random() * 999)}`;
-
-            // If backend connected, call FastAPI purchase endpoint
-            if (isBackendConnected) {
-                try {
-                    const res = await fetch('/api/purchase', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            customer_id: customer.id,
-                            product_id: product.id,
-                            quantity: 1
-                        })
-                    });
-                    if (res.ok) {
-                        await checkBackend();
-                    }
-                } catch (e) {
-                    console.warn('Backend purchase call error:', e);
-                }
-            }
-
-            // Append new transaction to client-side dataset
-            state.rawTransactions.push({
-                invoice: invNum,
-                customerId: customer.id,
-                productId: product.id,
-                qty: 1,
-                timestamp: timeStr,
-                status: 'Valid (Simulated)'
-            });
-
-            // Re-run full data prep & SVD inference
-            runDataPreparationPipeline();
-            await refreshAllViews();
-
-            showToast(`Added +1 "${product.name}" for ${customer.id}. SVD scores updated!`);
-        }
-
-        async function resetSimulation() {
-            if (isBackendConnected) {
-                try {
-                    await fetch('/api/reset', { method: 'POST' });
-                    await checkBackend();
-                } catch (e) {
-                    console.warn('Backend reset call error:', e);
-                }
-            }
-            state.rawTransactions = JSON.parse(JSON.stringify(INITIAL_RAW_TRANSACTIONS));
-            runDataPreparationPipeline();
-            await refreshAllViews();
-            showToast('Dataset reset to initial baseline transactions.');
-        }
-
-        function switchPipelineTab(tabName) {
-            state.activePipelineTab = tabName;
-            ['raw', 'cleaned', 'matrix'].forEach(t => {
-                const view = document.getElementById(`pipeline-view-${t}`);
-                const btn = document.getElementById(`tab-btn-${t}`);
-                if (t === tabName) {
-                    view.classList.remove('hidden');
-                    btn.className = 'pipeline-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-white text-brand-700 shadow-xs';
-                } else {
-                    view.classList.add('hidden');
-                    btn.className = 'pipeline-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900';
+            tabs.forEach(t => {
+                const view = document.getElementById('view-' + t);
+                const btn = document.getElementById('tab-' + t);
+                
+                if (view) view.classList.add('hidden');
+                if (btn) {
+                    btn.classList.remove('bg-amber-500', 'text-zinc-950', 'font-bold');
+                    btn.classList.add('text-zinc-400');
                 }
             });
-        }
 
-        function showToast(message) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'pointer-events-auto flex items-center gap-2.5 bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-xl shadow-lg border border-slate-700 fade-in';
-            toast.innerHTML = `
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>${message}</span>
-            `;
-            container.appendChild(toast);
+            const activeView = document.getElementById('view-' + tabId);
+            const activeBtn = document.getElementById('tab-' + tabId);
+
+            if (activeView) activeView.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.classList.add('bg-amber-500', 'text-zinc-950', 'font-bold');
+                activeBtn.classList.remove('text-zinc-400');
+            }
 
             setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3200);
+                if (tabId === 'scorer') {
+                    if (weightChart) weightChart.resize();
+                    if (gaugeChart) gaugeChart.resize();
+                }
+                if (tabId === 'optimizer' && lossChart) lossChart.resize();
+                if (tabId === 'stats' && distChart) distChart.resize();
+            }, 50);
         }
 
-        // ==========================================
-        // 6. THEME & COLOR CUSTOMIZATION ENGINE
-        // ==========================================
-        const THEMES = {
-            indigo: {
-                name: 'Electric Indigo',
-                primary: '#4f46e5',
-                colors: {
-                    50: '#eef2ff',
-                    100: '#e0e7ff',
-                    200: '#c7d2fe',
-                    300: '#a5b4fc',
-                    500: '#6366f1',
-                    600: '#4f46e5',
-                    700: '#4338ca',
-                    900: '#312e81',
-                    950: '#1e1b4b'
-                }
-            },
-            emerald: {
-                name: 'Cyber Emerald',
-                primary: '#059669',
-                colors: {
-                    50: '#ecfdf5',
-                    100: '#d1fae5',
-                    200: '#a7f3d0',
-                    300: '#6ee7b7',
-                    500: '#10b981',
-                    600: '#059669',
-                    700: '#047857',
-                    900: '#064e3b',
-                    950: '#022c22'
-                }
-            },
-            ocean: {
-                name: 'Oceanic Azure',
-                primary: '#0284c7',
-                colors: {
-                    50: '#f0f9ff',
-                    100: '#e0f2fe',
-                    200: '#bae6fd',
-                    300: '#7dd3fc',
-                    500: '#0ea5e9',
-                    600: '#0284c7',
-                    700: '#0369a1',
-                    900: '#0c4a6e',
-                    950: '#082f49'
-                }
-            },
-            crimson: {
-                name: 'Crimson Rose',
-                primary: '#e11d48',
-                colors: {
-                    50: '#fff1f2',
-                    100: '#ffe4e6',
-                    200: '#fecdd3',
-                    300: '#fda4af',
-                    500: '#f43f5e',
-                    600: '#e11d48',
-                    700: '#be123c',
-                    900: '#881337',
-                    950: '#4c0519'
-                }
-            },
-            amber: {
-                name: 'Solar Amber',
-                primary: '#d97706',
-                colors: {
-                    50: '#fffbeb',
-                    100: '#fef3c7',
-                    200: '#fde68a',
-                    300: '#fcd34d',
-                    500: '#f59e0b',
-                    600: '#d97706',
-                    700: '#b45309',
-                    900: '#78350f',
-                    950: '#451a03'
-                }
-            },
-            cyberpunk: {
-                name: 'Neon Cyberpunk',
-                primary: '#9333ea',
-                colors: {
-                    50: '#faf5ff',
-                    100: '#f3e8ff',
-                    200: '#e9d5ff',
-                    300: '#d8b4fe',
-                    500: '#a855f7',
-                    600: '#9333ea',
-                    700: '#7e22ce',
-                    900: '#581c87',
-                    950: '#3b0764'
-                }
-            }
-        };
+        function updateScorer() {
+            const income = parseFloat(document.getElementById('input-income').value);
+            const dti = parseFloat(document.getElementById('input-dti').value);
+            const history = parseFloat(document.getElementById('input-history').value);
+            const threshold = parseFloat(document.getElementById('input-threshold').value);
 
-        let currentThemeKey = localStorage.getItem('recengine_theme') || 'indigo';
-        let isDarkMode = localStorage.getItem('recengine_dark') === 'true';
+            document.getElementById('val-income').innerText = '$' + income.toLocaleString();
+            document.getElementById('val-dti').innerText = dti + '%';
+            document.getElementById('val-history').innerText = history + ' Yrs';
+            document.getElementById('val-threshold').innerText = threshold.toFixed(2);
 
-        function applyTheme(themeKey) {
-            if (!THEMES[themeKey]) themeKey = 'indigo';
-            currentThemeKey = themeKey;
-            const theme = THEMES[themeKey];
-            const root = document.documentElement;
+            const inc_norm = (income - 50000) / 15000;
+            const dti_norm = dti / 100;
+            
+            const w_inc = -1.8;
+            const w_dti = 2.5;
+            const w_hist = -0.5;
+            const bias = -0.2;
 
-            Object.entries(theme.colors).forEach(([shade, hex]) => {
-                root.style.setProperty(`--brand-${shade}`, hex);
-            });
+            const z = (w_inc * inc_norm) + (w_dti * dti_norm) + (w_hist * (history / 10)) + bias;
+            const prob = 1 / (1 + Math.exp(-z));
+            const probPct = prob * 100;
+            currentProbability = probPct;
 
-            const swatch = document.getElementById('theme-swatch');
-            const nameEl = document.getElementById('theme-name');
-            if (swatch) swatch.style.backgroundColor = theme.primary;
-            if (nameEl) nameEl.textContent = theme.name;
+            document.getElementById('output-prob').innerText = probPct.toFixed(1) + '%';
+            document.getElementById('math-z').innerText = 'z = ' + z.toFixed(3);
+            document.getElementById('math-sigmoid').innerText = 'σ(z) = ' + prob.toFixed(3);
 
-            // Update checkmarks in dropdown
-            Object.keys(THEMES).forEach(k => {
-                const check = document.getElementById(`check-${k}`);
-                if (check) {
-                    if (k === themeKey) check.classList.remove('hidden');
-                    else check.classList.add('hidden');
-                }
-            });
-
-            localStorage.setItem('recengine_theme', themeKey);
-        }
-
-        function setTheme(themeKey) {
-            applyTheme(themeKey);
-            const dropdown = document.getElementById('theme-dropdown');
-            if (dropdown) dropdown.classList.add('hidden');
-            refreshAllViews();
-            showToast(`Switched palette to "${THEMES[themeKey].name}"`);
-        }
-
-        function toggleThemeDropdown(e) {
-            if (e) e.stopPropagation();
-            const dropdown = document.getElementById('theme-dropdown');
-            if (dropdown) dropdown.classList.toggle('hidden');
-        }
-
-        // Close dropdown when clicking anywhere outside
-        document.addEventListener('click', (e) => {
-            const menuBtn = document.getElementById('theme-menu-btn');
-            const dropdown = document.getElementById('theme-dropdown');
-            if (dropdown && menuBtn && !menuBtn.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
-
-        function applyDarkMode(dark) {
-            isDarkMode = dark;
-            const root = document.documentElement;
-            const icon = document.getElementById('dark-mode-icon');
-            if (dark) {
-                root.classList.add('dark');
-                if (icon) {
-                    icon.setAttribute('data-lucide', 'sun');
-                    icon.classList.remove('text-slate-600');
-                    icon.classList.add('text-amber-400');
-                }
+            const badge = document.getElementById('output-badge');
+            
+            if (prob >= threshold) {
+                badge.innerText = 'REJECTED (High Risk)';
+                badge.className = 'mt-4 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-rose-950/80 border border-rose-800 text-rose-400';
+            } else if (prob >= (threshold * 0.65)) {
+                badge.innerText = 'REVIEW (Medium Risk)';
+                badge.className = 'mt-4 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-orange-950/80 border border-orange-800 text-orange-400';
             } else {
-                root.classList.remove('dark');
-                if (icon) {
-                    icon.setAttribute('data-lucide', 'moon');
-                    icon.classList.remove('text-amber-400');
-                    icon.classList.add('text-slate-600');
-                }
+                badge.innerText = 'APPROVED (Low Risk)';
+                badge.className = 'mt-4 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-950/80 border border-amber-800 text-amber-400';
             }
-            localStorage.setItem('recengine_dark', dark ? 'true' : 'false');
-            lucide.createIcons();
+
+            if (weightChart) {
+                weightChart.data.datasets[0].data = [(w_inc * inc_norm), (w_dti * dti_norm), (w_hist * (history / 10))];
+                weightChart.update();
+            }
+
+            if (gaugeChart) {
+                gaugeChart.update();
+            }
         }
 
-        function toggleDarkMode() {
-            applyDarkMode(!isDarkMode);
-            showToast(isDarkMode ? 'Dark Mode (Midnight) enabled' : 'Light Mode enabled');
+        function runOptimization() {
+            const lr = parseFloat(document.getElementById('opt-lr').value);
+            const maxEpochs = parseInt(document.getElementById('opt-epochs').value);
+
+            let labels = [];
+            let lossData = [];
+            let currentLoss = 0.69315;
+
+            for (let i = 0; i <= maxEpochs; i += Math.max(1, Math.floor(maxEpochs / 20))) {
+                labels.push(i);
+                let decayFactor = lr > 1.0 ? 0.02 * Math.sin(i / 10) : (lr * 0.05);
+                currentLoss = Math.max(0.25, 0.69315 * Math.exp(-decayFactor * (i / 5)) + (Math.random() * 0.01));
+                lossData.push(parseFloat(currentLoss.toFixed(5)));
+            }
+
+            if (lossChart) {
+                lossChart.data.labels = labels;
+                lossChart.data.datasets[0].data = lossData;
+                lossChart.update();
+            }
+
+            document.getElementById('log-final-loss').innerText = currentLoss.toFixed(5);
+            document.getElementById('log-w1').innerText = (-1.8 - (lr * 0.1)).toFixed(3);
+            document.getElementById('log-w2').innerText = (+2.45 + (lr * 0.05)).toFixed(3);
+            document.getElementById('log-b').innerText = (-0.48 - (lr * 0.02)).toFixed(3);
         }
 
-        async function refreshAllViews() {
-            renderCustomerCards();
-            renderCustomerHistoryAndSimulator();
-            await renderRecommendations();
-            renderPipelineExplorer();
-            lucide.createIcons();
-        }
+        window.onload = function() {
+            const ctxGauge = document.getElementById('chart-gauge').getContext('2d');
+            gaugeChart = new Chart(ctxGauge, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                    datasets: [{
+                        data: [35, 30, 35],
+                        backgroundColor: ['#f59e0b', '#f97316', '#f43f5e'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    rotation: -90,
+                    circumference: 180,
+                    cutout: '72%',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
 
-        // Top-N Slider Event Listener
-        document.getElementById('top-n-slider').addEventListener('input', async (e) => {
-            state.topN = parseInt(e.target.value, 10);
-            document.getElementById('top-n-value').textContent = state.topN;
-            await renderRecommendations();
-            lucide.createIcons();
-        });
+            const ctxWeights = document.getElementById('chart-weights').getContext('2d');
+            weightChart = new Chart(ctxWeights, {
+                type: 'bar',
+                data: {
+                    labels: ['Income Effect', 'DTI Effect', 'History Effect'],
+                    datasets: [{
+                        label: 'Weight Contribution',
+                        data: [-1.2, 1.05, -0.175],
+                        backgroundColor: ['#f59e0b', '#f43f5e', '#fbbf24']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } },
+                        x: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } }
+                    }
+                }
+            });
 
-        // Initialize Application on Load
-        window.addEventListener('DOMContentLoaded', async () => {
-            applyTheme(currentThemeKey);
-            applyDarkMode(isDarkMode);
-            await checkBackend();
-            runDataPreparationPipeline();
-            await refreshAllViews();
-        });
+            const ctxLoss = document.getElementById('chart-loss').getContext('2d');
+            lossChart = new Chart(ctxLoss, {
+                type: 'line',
+                data: {
+                    labels: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                    datasets: [{
+                        label: 'Loss J(W)',
+                        data: [0.69315, 0.582, 0.491, 0.421, 0.372, 0.338, 0.315, 0.301, 0.292, 0.285, 0.281],
+                        borderColor: '#f59e0b',
+                        tension: 0.3,
+                        fill: true,
+                        backgroundColor: 'rgba(245, 158, 11, 0.08)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } },
+                        x: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } }
+                    }
+                }
+            });
+
+            const ctxDist = document.getElementById('chart-dist').getContext('2d');
+            distChart = new Chart(ctxDist, {
+                type: 'line',
+                data: {
+                    labels: ['$20k', '$35k', '$50k', '$65k', '$80k', '$95k', '$110k'],
+                    datasets: [{
+                        label: 'Normal Distribution N(μ, σ²)',
+                        data: [0.02, 0.15, 0.40, 0.25, 0.10, 0.03, 0.01],
+                        borderColor: '#fbbf24',
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(251, 191, 36, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } },
+                        x: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } }
+                    }
+                }
+            });
+
+            updateScorer();
+        };
     </script>
 </body>
 </html>
