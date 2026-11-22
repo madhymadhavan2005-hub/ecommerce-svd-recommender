@@ -1,543 +1,1015 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Credit Risk & Default Prediction Workbench | M.Sc. AI & Data Science</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-    </style>
-</head>
-<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RecEngine — Smart Product Recommendations</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+            sans: ['DM Sans', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            canvas: 'rgb(var(--bg-canvas-rgb) / <alpha-value>)',
+            card: 'rgb(var(--bg-card-rgb) / <alpha-value>)',
+            subtle: 'rgb(var(--bg-subtle-rgb) / <alpha-value>)',
+            line: 'rgb(var(--border-subtle-rgb) / <alpha-value>)',
+            ink: 'rgb(var(--ink-primary-rgb) / <alpha-value>)',
+            'ink-muted': 'rgb(var(--ink-muted-rgb) / <alpha-value>)',
+            brand: {
+              50: 'rgb(var(--brand-50-rgb) / <alpha-value>)',
+              100: 'rgb(var(--brand-100-rgb) / <alpha-value>)',
+              200: 'rgb(var(--brand-200-rgb) / <alpha-value>)',
+              300: 'rgb(var(--brand-300-rgb) / <alpha-value>)',
+              500: 'rgb(var(--brand-500-rgb) / <alpha-value>)',
+              600: 'rgb(var(--brand-600-rgb) / <alpha-value>)',
+              700: 'rgb(var(--brand-700-rgb) / <alpha-value>)',
+              900: 'rgb(var(--brand-900-rgb) / <alpha-value>)',
+              950: 'rgb(var(--brand-950-rgb) / <alpha-value>)',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --bg-canvas: #f7f4ef;
+      --bg-card: #ffffff;
+      --bg-subtle: #efeae1;
+      --border-subtle: #e2dbd0;
+      --ink-primary: #1f1c18;
+      --ink-muted: #5c554c;
 
-    <!-- Header Navigation -->
-    <header class="border-b border-zinc-800 bg-zinc-900/90 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-amber-950/80 border border-amber-800 rounded-lg text-amber-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                </div>
-                <div>
-                    <span class="text-xs font-semibold uppercase tracking-wider text-amber-400 bg-amber-950/60 border border-amber-800 px-2.5 py-0.5 rounded-full">M.Sc. AI & Data Science Microproject</span>
-                    <h1 class="text-xl font-bold text-white mt-0.5">Intelligent Credit Risk Workbench</h1>
-                </div>
-            </div>
-            <!-- Navigation Tabs -->
-            <nav class="flex space-x-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800">
-                <button onclick="switchTab('scorer')" id="tab-scorer" class="px-4 py-2 text-sm font-medium rounded-md bg-amber-500 text-zinc-950 font-bold transition">Live Scorer</button>
-                <button onclick="switchTab('optimizer')" id="tab-optimizer" class="px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition">Gradient Descent</button>
-                <button onclick="switchTab('stats')" id="tab-stats" class="px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition">Probability & Stats</button>
-                <button onclick="switchTab('eval')" id="tab-eval" class="px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition">Model Evaluation</button>
-                <button onclick="switchTab('defense')" id="tab-defense" class="px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition">Viva & Defense</button>
-            </nav>
+      --bg-canvas-rgb: 247 244 239;
+      --bg-card-rgb: 255 255 255;
+      --bg-subtle-rgb: 239 234 225;
+      --border-subtle-rgb: 226 219 208;
+      --ink-primary-rgb: 31 28 24;
+      --ink-muted-rgb: 92 85 76;
+
+      --brand-50: #edf6f1;
+      --brand-100: #d8ede2;
+      --brand-200: #b7dec9;
+      --brand-300: #88c8a8;
+      --brand-500: #40916c;
+      --brand-600: #2d6a4f;
+      --brand-700: #22523d;
+      --brand-900: #163829;
+      --brand-950: #0d2219;
+
+      --brand-50-rgb: 237 246 241;
+      --brand-100-rgb: 216 237 226;
+      --brand-200-rgb: 183 222 201;
+      --brand-300-rgb: 136 200 168;
+      --brand-500-rgb: 64 145 108;
+      --brand-600-rgb: 45 106 79;
+      --brand-700-rgb: 34 82 61;
+      --brand-900-rgb: 22 56 41;
+      --brand-950-rgb: 13 34 25;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--ink-primary);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, h4, .font-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+<script src="/_aistudio-iframe.js?v=29045eb3"></script></head>
+<body class="min-h-screen flex flex-col bg-canvas text-ink">
+
+  <!-- Top Navigation (Clean 3-Zone Bar) -->
+  <header class="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur-sm">
+    <div class="mx-auto flex h-14 max-w-7xl items-center justify-between gap-8 px-4 sm:px-6 lg:px-8">
+      <a href="#shoppers" class="font-display text-lg font-bold tracking-tight text-ink whitespace-nowrap shrink-0">
+        RecEngine
+      </a>
+
+      <nav aria-label="Primary sections" class="hidden md:flex items-center gap-6 text-sm font-medium text-ink-muted">
+        <a href="#shoppers" class="whitespace-nowrap shrink-0 transition-colors hover:text-ink hover:underline underline-offset-4">Shoppers</a>
+        <a href="#recommendations" class="whitespace-nowrap shrink-0 transition-colors hover:text-ink hover:underline underline-offset-4">Picked For You</a>
+        <a href="#catalog" class="whitespace-nowrap shrink-0 transition-colors hover:text-ink hover:underline underline-offset-4">Quick Shop</a>
+        <a href="#insights" class="whitespace-nowrap shrink-0 transition-colors hover:text-ink hover:underline underline-offset-4">Behind the Picks</a>
+      </nav>
+
+      <button type="button" onclick="resetSimulation()" class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-3.5 py-2 text-xs font-semibold text-ink-muted transition-colors hover:bg-subtle hover:text-ink whitespace-nowrap shrink-0">
+        <i data-lucide="rotate-ccw" class="h-3.5 w-3.5"></i>
+        Reset Demo
+      </button>
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-7xl flex-grow space-y-8 px-4 py-7 sm:px-6 lg:px-8">
+
+    <!-- Section 1: Choose a Shopper -->
+    <section id="shoppers" class="scroll-mt-20">
+      <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div class="min-w-0">
+          <h1 class="font-display text-2xl font-bold tracking-tight text-ink">Choose a Shopper</h1>
+          <p class="mt-1 text-sm text-ink-muted">
+            Select a customer profile to browse their order history and see personalized product picks update live.
+          </p>
         </div>
-    </header>
 
-    <main class="max-w-7xl mx-auto px-6 py-8">
+        <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 self-start lg:self-auto shrink-0">
+          <div id="theme-picker" role="group" aria-label="Dashboard theme" class="flex flex-wrap items-center gap-1 rounded-xl border border-line bg-card p-1"></div>
 
-        <!-- TAB 1: LIVE APPLICANT SCORER -->
-        <section id="view-scorer" class="space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Input Controls -->
-                <div class="lg:col-span-1 bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-5">
-                    <h2 class="text-lg font-semibold text-white border-b border-zinc-800 pb-3">Applicant Profile Parameters</h2>
-                    
-                    <div>
-                        <div class="flex justify-between text-sm mb-2">
-                            <span class="text-zinc-400">Annual Income ($)</span>
-                            <span id="val-income" class="font-mono text-amber-400 font-bold">$45,000</span>
-                        </div>
-                        <input type="range" id="input-income" min="15000" max="120000" step="1000" value="45000" oninput="updateScorer()" class="w-full accent-amber-500">
-                    </div>
+          <button type="button" id="dark-mode-toggle" onclick="toggleDarkMode()" aria-label="Switch to dark mode" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-line bg-card text-ink-muted hover:bg-subtle hover:text-ink">
+            <i id="dark-mode-icon" data-lucide="moon" class="h-4 w-4"></i>
+          </button>
+        </div>
+      </div>
 
-                    <div>
-                        <div class="flex justify-between text-sm mb-2">
-                            <span class="text-zinc-400">Debt-to-Income (DTI) Ratio</span>
-                            <span id="val-dti" class="font-mono text-amber-400 font-bold">42%</span>
-                        </div>
-                        <input type="range" id="input-dti" min="10" max="80" step="1" value="42" oninput="updateScorer()" class="w-full accent-amber-500">
-                    </div>
+      <div id="customer-cards-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4"></div>
+    </section>
 
-                    <div>
-                        <div class="flex justify-between text-sm mb-2">
-                            <span class="text-zinc-400">Credit History Length (Years)</span>
-                            <span id="val-history" class="font-mono text-amber-400 font-bold">3.5 Yrs</span>
-                        </div>
-                        <input type="range" id="input-history" min="0.5" max="15" step="0.5" value="3.5" oninput="updateScorer()" class="w-full accent-amber-500">
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between text-sm mb-2">
-                            <span class="text-zinc-400">Decision Risk Threshold</span>
-                            <span id="val-threshold" class="font-mono text-amber-400 font-bold">0.50</span>
-                        </div>
-                        <input type="range" id="input-threshold" min="0.1" max="0.9" step="0.05" value="0.50" oninput="updateScorer()" class="w-full accent-amber-500">
-                    </div>
-                </div>
-
-                <!-- Output Display & Mathematical Breakdown -->
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                        <!-- Probability Text Box -->
-                        <div class="md:col-span-1">
-                            <span class="text-xs text-zinc-400 uppercase tracking-wider block">Default Probability</span>
-                            <div class="text-4xl font-extrabold text-white mt-2 font-mono" id="output-prob">34.2%</div>
-                            <div class="mt-4 inline-block px-3 py-1 rounded-full text-xs font-semibold" id="output-badge">APPROVED (Low Risk)</div>
-                        </div>
-
-                        <!-- Speedometer Gauge Canvas with Needle -->
-                        <div class="md:col-span-1 flex flex-col items-center justify-center border-t md:border-t-0 md:border-l md:border-r border-zinc-800 pt-4 md:pt-0 px-2">
-                            <span class="text-xs text-zinc-400 uppercase tracking-wider mb-1">Risk Gauge Speedometer</span>
-                            <div class="w-44 h-28 relative">
-                                <canvas id="chart-gauge"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Math Breakdown Box -->
-                        <div class="md:col-span-1 space-y-2 bg-zinc-950 p-4 rounded-lg border border-zinc-800 font-mono text-xs">
-                            <div class="text-zinc-400 border-b border-zinc-800 pb-1 font-sans text-xs">Mathematical Pipeline</div>
-                            <div>Raw Linear combination: <span id="math-z" class="text-amber-400 font-bold block">z = -0.654</span></div>
-                            <div>Sigmoid Transformation: <span id="math-sigmoid" class="text-amber-400 font-bold block">σ(z) = 0.342</span></div>
-                            <div>Decision Rule: <span id="math-rule" class="text-zinc-300 block">p &lt; 0.50 → Class 0</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Visual Linear Combination -->
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                        <h3 class="text-base font-semibold text-white mb-4">Feature Weight Contributions</h3>
-                        <div class="h-56 relative">
-                            <canvas id="chart-weights"></canvas>
-                        </div>
-                    </div>
-                </div>
+    <!-- Section 2: Purchases + Quick Shop | Personalized Picks -->
+    <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+      <!-- Left Column -->
+      <div class="space-y-6 lg:col-span-5">
+        <section class="overflow-hidden rounded-2xl border border-line bg-card">
+          <div class="flex items-center justify-between border-b border-line px-5 py-4">
+            <div>
+              <h2 id="history-title" class="font-display text-base font-semibold text-ink">Purchases</h2>
+              <p class="mt-0.5 text-xs text-ink-muted">Items bought so far and estimated interest</p>
             </div>
+            <span id="history-count-badge" class="font-mono tabular-nums text-xs font-medium text-ink-muted">0 items</span>
+          </div>
+          <div id="purchase-history-container" class="p-5"></div>
         </section>
 
-        <!-- TAB 2: GRADIENT DESCENT OPTIMIZER -->
-        <section id="view-optimizer" class="hidden space-y-6">
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-wrap gap-6 items-center justify-between">
-                <div>
-                    <h2 class="text-lg font-semibold text-white">Gradient Descent & Loss Minimization</h2>
-                    <p class="text-sm text-zinc-400">Syllabus Unit 3 (Optimization) & Unit 5 (Binary Cross-Entropy Loss)</p>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div>
-                        <label class="text-xs text-zinc-400 block mb-1">Learning Rate (&alpha;)</label>
-                        <select id="opt-lr" class="bg-zinc-950 border border-zinc-700 text-white text-sm rounded-lg p-2 font-mono">
-                            <option value="0.01">0.01 (Slow)</option>
-                            <option value="0.1" selected>0.10 (Optimal)</option>
-                            <option value="0.5">0.50 (Aggressive)</option>
-                            <option value="1.2">1.20 (Overshoot)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs text-zinc-400 block mb-1">Epochs</label>
-                        <input type="number" id="opt-epochs" value="200" min="20" max="500" step="20" class="bg-zinc-950 border border-zinc-700 text-white text-sm rounded-lg p-2 w-24 font-mono">
-                    </div>
-                    <button onclick="runOptimization()" class="mt-4 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-5 py-2 rounded-lg text-sm transition cursor-pointer">Run Gradient Descent</button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                    <h3 class="text-base font-semibold text-white mb-4">Loss Curve J(W) Across Iterations</h3>
-                    <div class="h-64 relative">
-                        <canvas id="chart-loss"></canvas>
-                    </div>
-                </div>
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4 font-mono text-xs">
-                    <h3 class="text-base font-semibold text-white font-sans border-b border-zinc-800 pb-2">Optimization Logs</h3>
-                    <div class="space-y-2 text-zinc-300">
-                        <div>Initial Loss J(W₀): <span id="log-init-loss" class="text-rose-400">0.69315</span></div>
-                        <div>Final Converged Loss: <span id="log-final-loss" class="text-emerald-400">0.28140</span></div>
-                        <div class="border-t border-zinc-800 pt-2 text-zinc-400">Learned Weights Vector:</div>
-                        <div>w₁ (Income): <span id="log-w1" class="text-amber-400">-1.842</span></div>
-                        <div>w₂ (DTI Ratio): <span id="log-w2" class="text-amber-400">+2.451</span></div>
-                        <div>b (Bias): <span id="log-b" class="text-amber-400">-0.481</span></div>
-                    </div>
-                </div>
-            </div>
+        <section id="catalog" class="scroll-mt-20 overflow-hidden rounded-2xl border border-line bg-card">
+          <div class="border-b border-line px-5 py-4">
+            <h2 class="font-display text-base font-semibold text-ink">Quick Shop Catalog</h2>
+            <p class="mt-0.5 text-xs text-ink-muted">
+              Buy any item as <span id="sim-customer-name" class="font-semibold text-ink">Alex Rivera</span> and watch recommendations adjust instantly.
+            </p>
+          </div>
+          <div id="catalog-simulator-list" class="max-h-[360px] divide-y divide-line overflow-y-auto"></div>
         </section>
+      </div>
 
-        <!-- TAB 3: PROBABILITY & STATS -->
-        <section id="view-stats" class="hidden space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                    <span class="text-xs text-zinc-400 uppercase">Expectation E[X]</span>
-                    <div class="text-2xl font-bold text-white mt-1 font-mono">$50,240.00</div>
-                    <p class="text-xs text-zinc-500 mt-2">Mean borrower income distribution (Unit 4)</p>
-                </div>
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                    <span class="text-xs text-zinc-400 uppercase">Variance Var(X)</span>
-                    <div class="text-2xl font-bold text-white mt-1 font-mono">2.25 &times; 10<sup>8</sup></div>
-                    <p class="text-xs text-zinc-500 mt-2">Spread of financial features (Unit 4)</p>
-                </div>
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                    <span class="text-xs text-zinc-400 uppercase">Posterior Risk P(D | R)</span>
-                    <div class="text-2xl font-bold text-amber-400 mt-1 font-mono">0.684</div>
-                    <p class="text-xs text-zinc-500 mt-2">Bayes' Theorem updated probability (Unit 4)</p>
-                </div>
+      <!-- Right Column -->
+      <section id="recommendations" class="scroll-mt-20 overflow-hidden rounded-2xl border border-line bg-card lg:col-span-7">
+        <div class="flex flex-col gap-4 border-b border-line px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 id="recommendations-title" class="font-display text-lg font-bold text-ink">Picked for Alex Rivera</h2>
+              <span id="model-mode-label" class="text-xs font-medium text-brand-600 dark:text-brand-300">· Personalized</span>
             </div>
+            <p id="recommendations-subtitle" class="mt-0.5 text-xs text-ink-muted">
+              Top items chosen from their shopping history and similar customers
+            </p>
+          </div>
 
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                <h3 class="text-base font-semibold text-white mb-4">Borrower Income Normal Distribution</h3>
-                <div class="h-64 relative">
-                    <canvas id="chart-dist"></canvas>
-                </div>
-            </div>
-        </section>
+          <div class="flex items-center gap-3 self-start rounded-xl border border-line bg-subtle/70 px-3 py-2 sm:self-auto">
+            <label for="top-n-slider" class="text-xs font-semibold text-ink whitespace-nowrap">
+              Show Top <span id="top-n-value" class="font-mono tabular-nums text-brand-600 dark:text-brand-300">3</span>
+            </label>
+            <input id="top-n-slider" type="range" min="1" max="6" value="3" class="w-24 cursor-pointer accent-brand-600" />
+          </div>
+        </div>
 
-        <!-- TAB 4: MODEL EVALUATION -->
-        <section id="view-eval" class="hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Confusion Matrix -->
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                    <h3 class="text-base font-semibold text-white mb-4">Confusion Matrix (Threshold = 0.50)</h3>
-                    <div class="grid grid-cols-2 gap-4 text-center font-mono">
-                        <div class="bg-emerald-950/40 border border-emerald-800 p-6 rounded-lg">
-                            <span class="text-xs text-emerald-400 block">True Negatives (TN)</span>
-                            <span class="text-3xl font-extrabold text-white mt-1 block">680</span>
-                            <span class="text-xs text-zinc-400 mt-1 block">Good Loans Approved</span>
-                        </div>
-                        <div class="bg-rose-950/40 border border-rose-800 p-6 rounded-lg">
-                            <span class="text-xs text-rose-400 block">False Positives (FP)</span>
-                            <span class="text-3xl font-extrabold text-white mt-1 block">45</span>
-                            <span class="text-xs text-zinc-400 mt-1 block">Bad Loans Approved</span>
-                        </div>
-                        <div class="bg-amber-950/40 border border-amber-800 p-6 rounded-lg">
-                            <span class="text-xs text-amber-400 block">False Negatives (FN)</span>
-                            <span class="text-3xl font-extrabold text-white mt-1 block">35</span>
-                            <span class="text-xs text-zinc-400 mt-1 block">Good Loans Rejected</span>
-                        </div>
-                        <div class="bg-amber-950/40 border border-amber-800 p-6 rounded-lg">
-                            <span class="text-xs text-amber-400 block">True Positives (TP)</span>
-                            <span class="text-3xl font-extrabold text-white mt-1 block">240</span>
-                            <span class="text-xs text-zinc-400 mt-1 block">Defaults Caught</span>
-                        </div>
-                    </div>
-                </div>
+        <div id="cold-start-banner" class="hidden mx-6 mt-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+          <i data-lucide="sparkles" class="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400"></i>
+          <p class="leading-relaxed">
+            <strong>Welcome, new shopper!</strong> Since <span id="cold-start-name">this shopper</span> hasn't placed an order yet, we're showing top trending items. Add any item to their cart to unlock tailored picks.
+          </p>
+        </div>
 
-                <!-- Statistical Metrics -->
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-                    <h3 class="text-base font-semibold text-white border-b border-zinc-800 pb-3">Evaluation Metrics (Unit 5)</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-zinc-400">Classification Accuracy</span>
-                                <span class="font-mono text-amber-400 font-bold">92.0%</span>
-                            </div>
-                            <div class="w-full bg-zinc-950 h-2 rounded-full overflow-hidden">
-                                <div class="bg-amber-500 h-full" style="width: 92%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-zinc-400">Precision (Avoid False Alarms)</span>
-                                <span class="font-mono text-amber-400 font-bold">84.2%</span>
-                            </div>
-                            <div class="w-full bg-zinc-950 h-2 rounded-full overflow-hidden">
-                                <div class="bg-amber-500 h-full" style="width: 84.2%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-zinc-400">Recall (Catch Default Risks)</span>
-                                <span class="font-mono text-amber-400 font-bold">87.3%</span>
-                            </div>
-                            <div class="w-full bg-zinc-950 h-2 rounded-full overflow-hidden">
-                                <div class="bg-amber-500 h-full" style="width: 87.3%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <div id="recommendations-container" class="divide-y divide-line p-6 pt-2"></div>
 
-        <!-- TAB 5: VIVA & DEFENSE -->
-        <section id="view-defense" class="hidden space-y-6">
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-6">
-                <h2 class="text-lg font-semibold text-white border-b border-zinc-800 pb-3">Academic Project Viva Voce & Defense Guide</h2>
-                
-                <div class="space-y-4 text-sm">
-                    <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800">
-                        <h3 class="text-amber-400 font-semibold mb-2">Q1: Why use Logistic Regression instead of Linear Regression for default prediction?</h3>
-                        <p class="text-zinc-300">Linear regression outputs continuous values from $-\infty$ to $+\infty$, which can produce probabilities below 0 or above 1. Logistic regression applies the Sigmoid link function $\sigma(z) = \frac{1}{1+e^{-z}}$ to map all outputs cleanly into the interval $(0, 1)$.</p>
-                    </div>
+        <div class="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-subtle/50 px-6 py-3 text-xs text-ink-muted">
+          <span>Recommendations adapt immediately with every purchase.</span>
+          <span>Live preference matching</span>
+        </div>
+      </section>
+    </div>
 
-                    <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800">
-                        <h3 class="text-amber-400 font-semibold mb-2">Q2: How does Gradient Descent update the model weights?</h3>
-                        <p class="text-zinc-300">By taking partial derivatives of the Binary Cross-Entropy loss function $J(W)$ with respect to each weight $w_j$: $\frac{\partial J}{\partial w_j} = \frac{1}{m} \sum (\hat{y}_i - y_i) x_{ij}$. The weights update iteratively: $w_j := w_j - \alpha \frac{\partial J}{\partial w_j}$.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <!-- Section 3: Behind the Picks -->
+    <section id="insights" class="scroll-mt-20 overflow-hidden rounded-2xl border border-line bg-card">
+      <div class="flex flex-col gap-4 border-b border-line px-6 py-5 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="font-display text-lg font-bold text-ink">Behind the Picks</h2>
+          <p class="mt-0.5 text-xs text-ink-muted">
+            See how order history turns into interest scores, taste patterns, and product recommendations.
+          </p>
+        </div>
 
-    </main>
+        <div role="tablist" aria-label="Recommendation insights" class="inline-flex flex-wrap gap-1 self-start rounded-xl bg-subtle p-1 md:self-auto">
+          <button type="button" role="tab" id="tab-btn-grid" onclick="switchInsightTab('grid')" class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 bg-card text-ink shadow-xs">Taste Grid</button>
+          <button type="button" role="tab" id="tab-btn-map" onclick="switchInsightTab('map')" class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 text-ink-muted hover:text-ink">Product Map</button>
+          <button type="button" role="tab" id="tab-btn-interests" onclick="switchInsightTab('interests')" class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 text-ink-muted hover:text-ink">Interest Summary</button>
+          <button type="button" role="tab" id="tab-btn-orders" onclick="switchInsightTab('orders')" class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 text-ink-muted hover:text-ink">Order Log</button>
+        </div>
+      </div>
 
-    <!-- JavaScript Logic -->
-    <script>
-        let weightChart, lossChart, distChart, gaugeChart;
-        let currentProbability = 34.2;
+      <!-- Tab 1: Taste Grid -->
+      <div id="insight-view-grid" class="p-6">
+        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p class="text-xs text-ink-muted">
+            Each cell shows a shopper's interest score (1–5) and quantity bought. Highlighted row: <strong id="grid-highlight-name" class="text-ink">Alex Rivera</strong>.
+          </p>
+          <div class="flex flex-wrap items-center gap-2 text-[11px] text-ink-muted">
+            <span>Not bought</span>
+            <span>·</span>
+            <span class="rounded bg-brand-100 px-1.5 py-0.5 font-mono text-brand-900">1.0–2.9 Low</span>
+            <span class="rounded bg-brand-200 px-1.5 py-0.5 font-mono text-brand-950">3.0–4.2 Medium</span>
+            <span class="rounded bg-brand-600 px-1.5 py-0.5 font-mono text-white">4.3–5.0 High</span>
+          </div>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-line">
+          <table class="w-full border-collapse text-center text-xs">
+            <thead id="matrix-table-head" class="border-b border-line bg-subtle/70 text-ink"></thead>
+            <tbody id="matrix-table-body" class="divide-y divide-line"></tbody>
+          </table>
+        </div>
+      </div>
 
-        // Custom Needle Plugin scoped strictly to the Speedometer Gauge
-        const gaugeNeedlePlugin = {
-            id: 'gaugeNeedle',
-            afterDatasetDraw(chart, args, options) {
-                // Restrict needle rendering ONLY to the gauge canvas
-                if (chart.canvas.id !== 'chart-gauge') return;
+      <!-- Tab 2: Product Map -->
+      <div id="insight-view-map" class="hidden p-6">
+        <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h3 class="font-display text-sm font-semibold text-ink">Product Taste Map</h3>
+            <p class="mt-0.5 text-xs text-ink-muted">
+              Similar products sit near each other. Dashed lines connect the shopper's taste center to their top picks. Click any product dot to buy.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-4 text-xs text-ink-muted">
+            <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-[#3b82f6]"></span>Tech &amp; Computing</span>
+            <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-[#c26a28]"></span>Home &amp; Kitchen</span>
+            <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-[#2d6a4f]"></span>Fitness &amp; Outdoor</span>
+          </div>
+        </div>
 
-                const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
-                ctx.save();
+        <div class="relative overflow-hidden rounded-xl border border-line bg-canvas p-3">
+          <div class="relative h-80 w-full sm:h-96">
+            <svg id="cluster-svg-map" class="h-full w-full" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet">
+              <line x1="0" y1="190" x2="800" y2="190" stroke="currentColor" stroke-dasharray="4 4" class="text-line" stroke-width="1" />
+              <line x1="400" y1="0" x2="400" y2="380" stroke="currentColor" stroke-dasharray="4 4" class="text-line" stroke-width="1" />
+              <ellipse cx="210" cy="210" rx="130" ry="85" fill="rgba(59, 130, 246, 0.08)" stroke="rgba(59, 130, 246, 0.30)" stroke-dasharray="5 5" stroke-width="1.2" />
+              <text x="210" y="138" text-anchor="middle" font-size="11" font-weight="600" fill="#3b82f6">Tech &amp; Computing</text>
+              <ellipse cx="560" cy="168" rx="135" ry="82" fill="rgba(194, 106, 40, 0.08)" stroke="rgba(194, 106, 40, 0.30)" stroke-dasharray="5 5" stroke-width="1.2" />
+              <text x="560" y="98" text-anchor="middle" font-size="11" font-weight="600" fill="#c26a28">Home &amp; Kitchen</text>
+              <ellipse cx="404" cy="304" rx="145" ry="56" fill="rgba(45, 106, 79, 0.08)" stroke="rgba(45, 106, 79, 0.30)" stroke-dasharray="5 5" stroke-width="1.2" />
+              <text x="404" y="348" text-anchor="middle" font-size="11" font-weight="600" fill="#40916c">Fitness &amp; Outdoor</text>
+              <g id="svg-rec-lines"></g>
+              <g id="svg-product-nodes"></g>
+              <g id="svg-customer-beacon"></g>
+            </svg>
+            <div id="map-hover-card" class="hidden absolute z-20 w-64 rounded-xl border border-line bg-card/95 p-3.5 text-xs shadow-lg backdrop-blur-sm"></div>
+          </div>
+        </div>
+      </div>
 
-                const dataValue = currentProbability;
-                const angle = Math.PI + (dataValue / 100) * Math.PI;
+      <!-- Tab 3: Interest Summary -->
+      <div id="insight-view-interests" class="hidden p-6">
+        <div class="mb-3 flex items-center justify-between gap-2 text-xs text-ink-muted">
+          <span>Valid orders are grouped by shopper and product, then scaled into a 1–5 interest score.</span>
+          <span id="cleaned-row-count" class="font-mono tabular-nums font-medium">0 pairs</span>
+        </div>
+        <div class="max-h-80 overflow-x-auto rounded-xl border border-line">
+          <table class="w-full border-collapse text-left text-xs">
+            <thead class="sticky top-0 border-b border-line bg-subtle text-ink">
+              <tr>
+                <th class="px-4 py-2.5 font-semibold">Shopper</th>
+                <th class="px-4 py-2.5 font-semibold">Product</th>
+                <th class="px-4 py-2.5 font-semibold">Category</th>
+                <th class="px-4 py-2.5 text-right font-semibold">Qty Bought</th>
+                <th class="px-4 py-2.5 text-right font-semibold">Interest (1–5)</th>
+              </tr>
+            </thead>
+            <tbody id="cleaned-table-body" class="divide-y divide-line"></tbody>
+          </table>
+        </div>
+      </div>
 
-                const cx = width / 2 + left;
-                const cy = height + top - 5;
-                const needleRadius = height - 15;
+      <!-- Tab 4: Order Log -->
+      <div id="insight-view-orders" class="hidden p-6">
+        <div class="mb-3 flex items-center justify-between gap-2 text-xs text-ink-muted">
+          <span>Original purchase records before duplicate or incomplete entries are filtered out.</span>
+          <span id="raw-row-count" class="font-mono tabular-nums font-medium">0 records</span>
+        </div>
+        <div class="max-h-80 overflow-x-auto rounded-xl border border-line">
+          <table class="w-full border-collapse text-left text-xs">
+            <thead class="sticky top-0 border-b border-line bg-subtle text-ink">
+              <tr>
+                <th class="px-4 py-2.5 font-semibold">Order</th>
+                <th class="px-4 py-2.5 font-semibold">Shopper</th>
+                <th class="px-4 py-2.5 font-semibold">Product</th>
+                <th class="px-4 py-2.5 text-right font-semibold">Qty</th>
+                <th class="px-4 py-2.5 font-semibold">Time</th>
+                <th class="px-4 py-2.5 font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody id="raw-table-body" class="divide-y divide-line"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
 
-                // Draw Pointer Needle
-                ctx.translate(cx, cy);
-                ctx.rotate(angle);
-                ctx.beginPath();
-                ctx.moveTo(0, -3);
-                ctx.lineTo(needleRadius, 0);
-                ctx.lineTo(0, 3);
-                ctx.fillStyle = '#f4f4f5';
-                ctx.fill();
-                ctx.rotate(-angle);
+  <footer class="mt-10 border-t border-line bg-card py-5">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 text-xs text-ink-muted sm:flex-row sm:px-6 lg:px-8">
+      <span>RecEngine — Personalized Product Recommendations</span>
+      <span>Humanized shopping experience · Built for Render</span>
+    </div>
+  </footer>
 
-                // Draw Center Cap
-                ctx.beginPath();
-                ctx.arc(0, 0, 6, 0, Math.PI * 2);
-                ctx.fillStyle = '#f59e0b';
-                ctx.fill();
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#18181b';
-                ctx.stroke();
+  <div id="toast-container" aria-live="polite" class="pointer-events-none fixed right-4 bottom-4 z-50 flex flex-col gap-2"></div>
 
-                ctx.restore();
-            }
+  <script>
+    const PRODUCTS = [
+      { id: 'P101', name: 'Wireless Mechanical Keyboard', category: 'Tech & Computing', price: 129, latent: [0.95, 0.10, 0.05] },
+      { id: 'P102', name: '4K USB-C Docking Station', category: 'Tech & Computing', price: 189, latent: [0.90, 0.15, 0.05] },
+      { id: 'P103', name: 'Ergonomic Vertical Mouse', category: 'Tech & Computing', price: 79, latent: [0.85, 0.10, 0.10] },
+      { id: 'P201', name: 'Precision Pour-Over Kettle', category: 'Home & Kitchen', price: 95, latent: [0.15, 0.92, 0.10] },
+      { id: 'P202', name: 'Burr Coffee Grinder Pro', category: 'Home & Kitchen', price: 145, latent: [0.10, 0.95, 0.05] },
+      { id: 'P203', name: 'Smart Air Fryer Oven', category: 'Home & Kitchen', price: 160, latent: [0.20, 0.82, 0.15] },
+      { id: 'P301', name: 'Adjustable Kettlebell 20kg', category: 'Fitness & Outdoor', price: 110, latent: [0.05, 0.10, 0.95] },
+      { id: 'P302', name: 'Insulated Trail Hydration Flask', category: 'Fitness & Outdoor', price: 38, latent: [0.15, 0.25, 0.85] },
+    ];
+
+    const CUSTOMERS = [
+      { id: 'C001', name: 'Alex Rivera', segment: 'Tech Enthusiast', icon: 'laptop', bio: 'Regularly upgrades desk gear, keyboards, and workstation accessories.' },
+      { id: 'C002', name: 'Priya Sharma', segment: 'Home & Kitchen', icon: 'coffee', bio: 'Loves specialty coffee gear and thoughtful kitchen appliances.' },
+      { id: 'C003', name: 'Marcus Vance', segment: 'Fitness & Outdoor', icon: 'dumbbell', bio: 'Focuses on home strength equipment and outdoor hydration essentials.' },
+      { id: 'C004', name: 'Elena Rostova', segment: 'New Shopper', icon: 'user-plus', bio: 'Brand new account with no orders yet. Add an item to personalize picks.' },
+    ];
+
+    const INITIAL_RAW_TRANSACTIONS = [
+      { invoice: 'INV-8801', customerId: 'C001', productId: 'P101', qty: 2, timestamp: '2026-10-12 09:14', status: 'Valid' },
+      { invoice: 'INV-8801', customerId: 'C001', productId: 'P101', qty: 2, timestamp: '2026-10-12 09:14', status: 'Duplicate (Removed)' },
+      { invoice: 'INV-8804', customerId: 'C001', productId: 'P102', qty: 1, timestamp: '2026-10-15 14:22', status: 'Valid' },
+      { invoice: 'INV-8810', customerId: 'C001', productId: 'P201', qty: 1, timestamp: '2026-10-19 18:05', status: 'Valid' },
+      { invoice: 'INV-8812', customerId: null, productId: 'P103', qty: 1, timestamp: '2026-10-20 11:30', status: 'Incomplete (Removed)' },
+      { invoice: 'INV-8819', customerId: 'C002', productId: 'P201', qty: 3, timestamp: '2026-10-21 08:45', status: 'Valid' },
+      { invoice: 'INV-8823', customerId: 'C002', productId: 'P202', qty: 2, timestamp: '2026-10-24 16:12', status: 'Valid' },
+      { invoice: 'INV-8829', customerId: 'C002', productId: 'P302', qty: 1, timestamp: '2026-10-28 12:00', status: 'Valid' },
+      { invoice: 'INV-8835', customerId: 'C003', productId: 'P301', qty: 2, timestamp: '2026-11-01 17:40', status: 'Valid' },
+      { invoice: 'INV-8840', customerId: 'C003', productId: 'P302', qty: 3, timestamp: '2026-11-04 07:15', status: 'Valid' },
+      { invoice: 'INV-8844', customerId: 'C003', productId: 'P103', qty: 1, timestamp: '2026-11-08 20:10', status: 'Valid' },
+    ];
+
+    const CLIENT_FALLBACK_COORDS = {
+      P101: { x: 25.0, y: 44.0 },
+      P102: { x: 34.0, y: 65.0 },
+      P103: { x: 18.0, y: 57.0 },
+      P201: { x: 68.0, y: 31.0 },
+      P202: { x: 79.0, y: 46.0 },
+      P203: { x: 63.0, y: 56.0 },
+      P301: { x: 42.0, y: 77.0 },
+      P302: { x: 59.0, y: 82.0 },
+    };
+
+    const THEMES = {
+      linen: {
+        name: 'Morning Linen',
+        tagline: 'Warm paper & botanical sage',
+        primary: '#2D6A4F',
+        colors: { 50: '#EDF6F1', 100: '#D8EDE2', 200: '#B7DEC9', 300: '#88C8A8', 500: '#40916C', 600: '#2D6A4F', 700: '#22523D', 900: '#163829', 950: '#0D2219' },
+        light: { canvas: '#F7F4EF', card: '#FFFFFF', subtle: '#EFEAE1', line: '#E2DBD0', ink: '#1F1C18', inkMuted: '#5C554C' },
+        dark: { canvas: '#141311', card: '#1C1A17', subtle: '#25221E', line: '#332F29', ink: '#F3EFE9', inkMuted: '#B2AAA0' },
+      },
+      coastal: {
+        name: 'Coastal Market',
+        tagline: 'Breezy mist & sea glass teal',
+        primary: '#0F766E',
+        colors: { 50: '#EEF8F7', 100: '#D5F0ED', 200: '#ACE0DA', 300: '#76C9C0', 500: '#14B8A6', 600: '#0F766E', 700: '#115E59', 900: '#134E4A', 950: '#0A2E2C' },
+        light: { canvas: '#F4F7F9', card: '#FFFFFF', subtle: '#E9EFF4', line: '#D6E0E8', ink: '#132230', inkMuted: '#4E6275' },
+        dark: { canvas: '#0E161D', card: '#15202B', subtle: '#1D2C3A', line: '#2A3D4F', ink: '#EDF3F8', inkMuted: '#9BB0C2' },
+      },
+      roastery: {
+        name: 'Roastery Café',
+        tagline: 'Soft parchment & warm cinnamon',
+        primary: '#A04B22',
+        colors: { 50: '#FDF4EE', 100: '#F9E4D6', 200: '#F2C6AA', 300: '#E59F75', 500: '#C46334', 600: '#A04B22', 700: '#823A19', 900: '#582712', 950: '#361609' },
+        light: { canvas: '#F8F5F0', card: '#FFFFFF', subtle: '#EFE9DF', line: '#E3DACB', ink: '#261C15', inkMuted: '#66564A' },
+        dark: { canvas: '#16110E', card: '#1F1814', subtle: '#29201B', line: '#382D26', ink: '#F5EFE8', inkMuted: '#B8A99D' },
+      },
+      studio: {
+        name: 'Studio Minimal',
+        tagline: 'Gallery stone & crisp cobalt',
+        primary: '#2563EB',
+        colors: { 50: '#EFF6FF', 100: '#DBEAFE', 200: '#BFDBFE', 300: '#93C5FD', 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8', 900: '#1E3A8A', 950: '#172554' },
+        light: { canvas: '#F5F5F4', card: '#FFFFFF', subtle: '#EAEAE8', line: '#DCDCD8', ink: '#18181B', inkMuted: '#52525B' },
+        dark: { canvas: '#111113', card: '#18181B', subtle: '#222226', line: '#303036', ink: '#F4F4F5', inkMuted: '#A1A1AA' },
+      },
+    };
+
+    const savedTheme = localStorage.getItem('recengine_theme_v2');
+    let state = {
+      selectedCustomerId: 'C001',
+      topN: 3,
+      activeTab: 'grid',
+      rawTransactions: JSON.parse(JSON.stringify(INITIAL_RAW_TRANSACTIONS)),
+      cleanedInteractions: [],
+      interactionMatrix: {},
+      themeKey: savedTheme && THEMES[savedTheme] ? savedTheme : 'linen',
+      isDarkMode: localStorage.getItem('recengine_dark') === 'true',
+      isBackendConnected: false,
+      mapCache: null,
+    };
+
+    function hexToRgbTriplet(hex) {
+      const clean = hex.replace('#', '');
+      const n = parseInt(clean, 16);
+      return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+    }
+
+    function setCssToken(name, hex) {
+      const root = document.documentElement;
+      root.style.setProperty(name, hex);
+      root.style.setProperty(`${name}-rgb`, hexToRgbTriplet(hex));
+    }
+
+    function applyThemeTokens() {
+      const palette = THEMES[state.themeKey] || THEMES.linen;
+      const surface = state.isDarkMode ? palette.dark : palette.light;
+      setCssToken('--bg-canvas', surface.canvas);
+      setCssToken('--bg-card', surface.card);
+      setCssToken('--bg-subtle', surface.subtle);
+      setCssToken('--border-subtle', surface.line);
+      setCssToken('--ink-primary', surface.ink);
+      setCssToken('--ink-muted', surface.inkMuted);
+      Object.entries(palette.colors).forEach(([shade, hex]) => {
+        setCssToken(`--brand-${shade}`, hex);
+      });
+    }
+
+    function runDataPreparationPipeline() {
+      const seen = new Set();
+      const validRows = [];
+      state.rawTransactions.forEach((row) => {
+        if (!row.customerId || !row.productId) return;
+        const key = `${row.invoice}_${row.customerId}_${row.productId}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        validRows.push(row);
+      });
+
+      const agg = {};
+      let maxCount = 1;
+      validRows.forEach((row) => {
+        const key = `${row.customerId}__${row.productId}`;
+        if (!agg[key]) agg[key] = { customerId: row.customerId, productId: row.productId, purchaseCount: 0 };
+        agg[key].purchaseCount += row.qty;
+        if (agg[key].purchaseCount > maxCount) maxCount = agg[key].purchaseCount;
+      });
+
+      state.cleanedInteractions = Object.values(agg).map((item) => {
+        const prod = PRODUCTS.find((p) => p.id === item.productId);
+        let score = 1 + (4 * (item.purchaseCount - 1)) / (maxCount > 1 ? maxCount - 1 : 1);
+        score = Math.min(5, Math.max(1, Number(score.toFixed(2))));
+        return {
+          ...item,
+          productName: prod ? prod.name : item.productId,
+          category: prod ? prod.category : 'General',
+          interestScore: score,
         };
+      });
 
-        Chart.register(gaugeNeedlePlugin);
-
-        function switchTab(tabId) {
-            const tabs = ['scorer', 'optimizer', 'stats', 'eval', 'defense'];
-            
-            tabs.forEach(t => {
-                const view = document.getElementById('view-' + t);
-                const btn = document.getElementById('tab-' + t);
-                
-                if (view) view.classList.add('hidden');
-                if (btn) {
-                    btn.classList.remove('bg-amber-500', 'text-zinc-950', 'font-bold');
-                    btn.classList.add('text-zinc-400');
-                }
-            });
-
-            const activeView = document.getElementById('view-' + tabId);
-            const activeBtn = document.getElementById('tab-' + tabId);
-
-            if (activeView) activeView.classList.remove('hidden');
-            if (activeBtn) {
-                activeBtn.classList.add('bg-amber-500', 'text-zinc-950', 'font-bold');
-                activeBtn.classList.remove('text-zinc-400');
-            }
-
-            setTimeout(() => {
-                if (tabId === 'scorer') {
-                    if (weightChart) weightChart.resize();
-                    if (gaugeChart) gaugeChart.resize();
-                }
-                if (tabId === 'optimizer' && lossChart) lossChart.resize();
-                if (tabId === 'stats' && distChart) distChart.resize();
-            }, 50);
+      const matrix = {};
+      CUSTOMERS.forEach((c) => {
+        matrix[c.id] = {};
+        PRODUCTS.forEach((p) => { matrix[c.id][p.id] = { qty: 0, interestScore: 0 }; });
+      });
+      state.cleanedInteractions.forEach((item) => {
+        if (matrix[item.customerId] && matrix[item.customerId][item.productId]) {
+          matrix[item.customerId][item.productId] = { qty: item.purchaseCount, interestScore: item.interestScore };
         }
+      });
+      state.interactionMatrix = matrix;
+    }
 
-        function updateScorer() {
-            const income = parseFloat(document.getElementById('input-income').value);
-            const dti = parseFloat(document.getElementById('input-dti').value);
-            const history = parseFloat(document.getElementById('input-history').value);
-            const threshold = parseFloat(document.getElementById('input-threshold').value);
+    function getLocalRecommendations(customerId, topN) {
+      const userRow = state.interactionMatrix[customerId] || {};
+      const purchasedIds = Object.keys(userRow).filter((pid) => userRow[pid].qty > 0);
+      const unpurchased = PRODUCTS.filter((p) => !purchasedIds.includes(p.id));
 
-            document.getElementById('val-income').innerText = '$' + income.toLocaleString();
-            document.getElementById('val-dti').innerText = dti + '%';
-            document.getElementById('val-history').innerText = history + ' Yrs';
-            document.getElementById('val-threshold').innerText = threshold.toFixed(2);
+      if (purchasedIds.length === 0) {
+        return unpurchased.map((product) => {
+          let total = 0, buyers = 0;
+          CUSTOMERS.forEach((c) => {
+            const cell = state.interactionMatrix[c.id][product.id];
+            if (cell && cell.qty > 0) { total += cell.interestScore; buyers++; }
+          });
+          const avg = buyers > 0 ? total / buyers : 3.2;
+          const estScore = Math.min(4.85, Math.max(3.1, Number((3.0 + avg * 0.35).toFixed(2))));
+          const matchPct = Math.round(((estScore - 1) / 4) * 100);
+          return {
+            product,
+            estScore,
+            matchPct,
+            isNewShopper: true,
+            reason: buyers > 0 ? `Popular with ${buyers} other shopper${buyers > 1 ? 's' : ''} — great starter pick.` : 'Highly rated catalog essential for a first order.',
+          };
+        }).sort((a, b) => b.estScore - a.estScore).slice(0, topN);
+      }
 
-            const inc_norm = (income - 50000) / 15000;
-            const dti_norm = dti / 100;
-            
-            const w_inc = -1.8;
-            const w_dti = 2.5;
-            const w_hist = -0.5;
-            const bias = -0.2;
+      let userLatent = [0, 0, 0], weightSum = 0, topAnchor = null, bestScore = -1;
+      purchasedIds.forEach((pid) => {
+        const prod = PRODUCTS.find((p) => p.id === pid);
+        const s = userRow[pid].interestScore;
+        if (s > bestScore) { bestScore = s; topAnchor = prod; }
+        userLatent[0] += prod.latent[0] * s;
+        userLatent[1] += prod.latent[1] * s;
+        userLatent[2] += prod.latent[2] * s;
+        weightSum += s;
+      });
+      userLatent = userLatent.map((v) => v / (weightSum || 1));
 
-            const z = (w_inc * inc_norm) + (w_dti * dti_norm) + (w_hist * (history / 10)) + bias;
-            const prob = 1 / (1 + Math.exp(-z));
-            const probPct = prob * 100;
-            currentProbability = probPct;
-
-            document.getElementById('output-prob').innerText = probPct.toFixed(1) + '%';
-            document.getElementById('math-z').innerText = 'z = ' + z.toFixed(3);
-            document.getElementById('math-sigmoid').innerText = 'σ(z) = ' + prob.toFixed(3);
-
-            const badge = document.getElementById('output-badge');
-            
-            if (prob >= threshold) {
-                badge.innerText = 'REJECTED (High Risk)';
-                badge.className = 'mt-4 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-rose-950/80 border border-rose-800 text-rose-400';
-            } else if (prob >= (threshold * 0.65)) {
-                badge.innerText = 'REVIEW (Medium Risk)';
-                badge.className = 'mt-4 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-orange-950/80 border border-orange-800 text-orange-400';
-            } else {
-                badge.innerText = 'APPROVED (Low Risk)';
-                badge.className = 'mt-4 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-950/80 border border-amber-800 text-amber-400';
+      return unpurchased.map((product) => {
+        const dot = userLatent[0] * product.latent[0] + userLatent[1] * product.latent[1] + userLatent[2] * product.latent[2];
+        let peerBoost = 0, hasPeer = false;
+        CUSTOMERS.forEach((other) => {
+          if (other.id === customerId) return;
+          if (state.interactionMatrix[other.id][product.id]?.qty > 0) {
+            if (purchasedIds.some((pid) => state.interactionMatrix[other.id][pid]?.qty > 0)) {
+              peerBoost += 0.25; hasPeer = true;
             }
+          }
+        });
+        const catBoost = topAnchor && product.category === topAnchor.category ? 0.7 : 0;
+        const estScore = Number(Math.min(4.98, Math.max(1.5, 1.65 + dot * 2.4 + catBoost + Math.min(0.35, peerBoost))).toFixed(2));
+        const matchPct = Math.min(99, Math.max(32, Math.round(((estScore - 1) / 4) * 100)));
+        let reason = 'A standout item from another category you might enjoy exploring.';
+        if (catBoost > 0 && topAnchor) reason = `Pairs naturally with your purchase of "${topAnchor.name}".`;
+        else if (dot > 0.6 && topAnchor) reason = `Matches the style of "${topAnchor.name}" in your order history.`;
+        else if (hasPeer) reason = 'Shoppers with similar tastes also picked up this item.';
+        return { product, estScore, matchPct, isNewShopper: false, reason };
+      }).sort((a, b) => b.estScore - a.estScore).slice(0, topN);
+    }
 
-            if (weightChart) {
-                weightChart.data.datasets[0].data = [(w_inc * inc_norm), (w_dti * dti_norm), (w_hist * (history / 10))];
-                weightChart.update();
-            }
+    async function checkBackend() {
+      try {
+        const res = await fetch('/api/health');
+        state.isBackendConnected = res.ok && (res.headers.get('content-type') || '').includes('application/json');
+      } catch {
+        state.isBackendConnected = false;
+      }
+    }
 
-            if (gaugeChart) {
-                gaugeChart.update();
-            }
+    function renderThemePicker() {
+      const container = document.getElementById('theme-picker');
+      container.innerHTML = Object.entries(THEMES).map(([key, palette]) => {
+        const active = key === state.themeKey;
+        return `<button type="button" onclick="setTheme('${key}')" aria-pressed="${active}" title="${palette.tagline}" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium whitespace-nowrap shrink-0 ${active ? 'bg-subtle font-semibold text-ink' : 'text-ink-muted hover:text-ink'}"><span class="h-2.5 w-2.5 rounded-full shrink-0" style="background-color:${palette.primary}" aria-hidden="true"></span>${palette.name}</button>`;
+      }).join('');
+    }
+
+    function applyTheme(key) {
+      if (!THEMES[key]) key = 'linen';
+      state.themeKey = key;
+      applyThemeTokens();
+      localStorage.setItem('recengine_theme_v2', key);
+      renderThemePicker();
+    }
+
+    function setTheme(key) {
+      applyTheme(key);
+      refreshAllViews();
+    }
+
+    function applyDarkMode(dark) {
+      state.isDarkMode = dark;
+      document.documentElement.classList.toggle('dark', dark);
+      applyThemeTokens();
+      const btn = document.getElementById('dark-mode-toggle');
+      if (btn) btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+      const icon = document.getElementById('dark-mode-icon');
+      if (icon) {
+        icon.setAttribute('data-lucide', dark ? 'sun' : 'moon');
+        icon.className = dark ? 'h-4 w-4 text-amber-400' : 'h-4 w-4';
+      }
+      localStorage.setItem('recengine_dark', dark ? 'true' : 'false');
+      lucide.createIcons();
+    }
+
+    function toggleDarkMode() {
+      applyDarkMode(!state.isDarkMode);
+    }
+
+    function renderCustomerCards() {
+      const grid = document.getElementById('customer-cards-grid');
+      grid.innerHTML = CUSTOMERS.map((c) => {
+        const isSelected = c.id === state.selectedCustomerId;
+        const row = state.interactionMatrix[c.id] || {};
+        const bought = Object.entries(row).filter(([, cell]) => cell.qty > 0);
+        const totalUnits = bought.reduce((sum, [, cell]) => sum + cell.qty, 0);
+        let segment = c.segment, bio = c.bio;
+        if (c.id === 'C004' && bought.length > 0) {
+          const [topId] = bought.reduce((a, b) => (b[1].qty > a[1].qty ? b : a));
+          const topProd = PRODUCTS.find((p) => p.id === topId);
+          if (topProd) {
+            segment = `${topProd.category} Shopper`;
+            bio = `Purchased ${topProd.name}. Personalized picks are now active.`;
+          }
         }
+        return `
+          <button type="button" onclick="selectCustomer('${c.id}')" aria-pressed="${isSelected}"
+            class="group flex flex-col justify-between rounded-2xl border p-4 text-left ${isSelected ? 'border-brand-600 bg-card ring-2 ring-brand-600/15 dark:border-brand-500 dark:ring-brand-500/25' : 'border-line bg-card hover:bg-subtle/50'}">
+            <div>
+              <div class="flex items-center gap-3">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isSelected ? 'bg-brand-600 text-white' : 'bg-subtle text-ink-muted group-hover:text-ink'}">
+                  <i data-lucide="${c.icon}" class="h-4 w-4"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="truncate font-display text-sm font-semibold text-ink">${c.name}</div>
+                  <div class="truncate text-xs text-ink-muted">${segment}</div>
+                </div>
+              </div>
+              <p class="mt-3 line-clamp-2 text-xs leading-relaxed text-ink-muted">${bio}</p>
+            </div>
+            <div class="mt-3.5 flex items-center justify-between border-t border-line pt-2.5 text-xs text-ink-muted">
+              <span><strong class="font-mono tabular-nums font-semibold text-ink">${bought.length}</strong> ${bought.length === 1 ? 'product' : 'products'}</span>
+              <span><strong class="font-mono tabular-nums font-semibold text-ink">${totalUnits}</strong> ${totalUnits === 1 ? 'item' : 'items'} bought</span>
+            </div>
+          </button>`;
+      }).join('');
+    }
 
-        function runOptimization() {
-            const lr = parseFloat(document.getElementById('opt-lr').value);
-            const maxEpochs = parseInt(document.getElementById('opt-epochs').value);
+    function renderSidebar() {
+      const customer = CUSTOMERS.find((c) => c.id === state.selectedCustomerId);
+      document.getElementById('history-title').textContent = `${customer.name}'s Purchases`;
+      document.getElementById('sim-customer-name').textContent = customer.name;
+      const items = state.cleanedInteractions.filter((i) => i.customerId === customer.id);
+      document.getElementById('history-count-badge').textContent = `${items.length} ${items.length === 1 ? 'item' : 'items'}`;
 
-            let labels = [];
-            let lossData = [];
-            let currentLoss = 0.69315;
+      const histContainer = document.getElementById('purchase-history-container');
+      if (items.length === 0) {
+        histContainer.innerHTML = `
+          <div class="rounded-xl border border-dashed border-line bg-subtle/60 px-4 py-8 text-center">
+            <div class="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-subtle text-ink-muted">
+              <i data-lucide="shopping-bag" class="h-5 w-5"></i>
+            </div>
+            <p class="text-sm font-semibold text-ink">No purchases yet</p>
+            <p class="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-ink-muted">Buy any product below for ${customer.name} to turn on personalized recommendations.</p>
+          </div>`;
+      } else {
+        histContainer.innerHTML = `
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-xs">
+              <thead>
+                <tr class="border-b border-line text-ink-muted">
+                  <th class="pb-2.5 font-medium">Product</th>
+                  <th class="pb-2.5 text-center font-medium">Qty</th>
+                  <th class="pb-2.5 text-right font-medium">Interest</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-line">
+                ${items.map((item) => `
+                  <tr class="h-11">
+                    <td class="py-2.5 pr-3">
+                      <div class="font-medium text-ink">${item.productName}</div>
+                      <div class="text-[11px] text-ink-muted">${item.category}</div>
+                    </td>
+                    <td class="py-2.5 px-2 text-center font-mono tabular-nums font-medium text-ink">${item.purchaseCount}</td>
+                    <td class="py-2.5 pl-2 text-right font-mono tabular-nums font-semibold text-brand-600 dark:text-brand-300">${item.interestScore.toFixed(1)} / 5</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      }
 
-            for (let i = 0; i <= maxEpochs; i += Math.max(1, Math.floor(maxEpochs / 20))) {
-                labels.push(i);
-                let decayFactor = lr > 1.0 ? 0.02 * Math.sin(i / 10) : (lr * 0.05);
-                currentLoss = Math.max(0.25, 0.69315 * Math.exp(-decayFactor * (i / 5)) + (Math.random() * 0.01));
-                lossData.push(parseFloat(currentLoss.toFixed(5)));
+      document.getElementById('catalog-simulator-list').innerHTML = PRODUCTS.map((prod) => {
+        const boughtQty = state.interactionMatrix[customer.id]?.[prod.id]?.qty || 0;
+        return `
+          <div class="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-subtle/50">
+            <div class="min-w-0">
+              <div class="truncate text-sm font-medium text-ink">${prod.name}</div>
+              <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-ink-muted">
+                <span>${prod.category}</span>
+                <span>·</span>
+                <span class="font-mono tabular-nums font-medium text-ink">$${prod.price}</span>
+                ${boughtQty > 0 ? `<span>·</span><span class="font-medium text-brand-600 dark:text-brand-300">Bought (${boughtQty})</span>` : ''}
+              </div>
+            </div>
+            <button type="button" onclick="simulatePurchase('${prod.id}')" class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-700 whitespace-nowrap">
+              <i data-lucide="shopping-cart" class="h-3.5 w-3.5"></i>
+              Buy
+            </button>
+          </div>`;
+      }).join('');
+    }
+
+    async function getActiveRecommendations() {
+      if (state.isBackendConnected) {
+        try {
+          const res = await fetch(`/api/recommendations/${state.selectedCustomerId}?top_n=${state.topN}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.recommendations)) {
+              return data.recommendations.map((r) => ({
+                product: { id: r.product_id, name: r.name, category: r.category, price: r.price },
+                estScore: r.est_score,
+                matchPct: r.match_pct,
+                isNewShopper: r.is_cold_start,
+                reason: r.reason,
+              }));
             }
+          }
+        } catch {}
+      }
+      return getLocalRecommendations(state.selectedCustomerId, state.topN);
+    }
 
-            if (lossChart) {
-                lossChart.data.labels = labels;
-                lossChart.data.datasets[0].data = lossData;
-                lossChart.update();
+    async function renderRecommendations() {
+      const customer = CUSTOMERS.find((c) => c.id === state.selectedCustomerId);
+      const recs = await getActiveRecommendations();
+      const isNew = recs.length > 0 && recs[0].isNewShopper;
+
+      document.getElementById('recommendations-title').textContent = `Picked for ${customer.name}`;
+      document.getElementById('model-mode-label').textContent = isNew ? '· Popular Right Now' : '· Personalized';
+      document.getElementById('recommendations-subtitle').textContent = isNew
+        ? 'Most loved items across the store while we learn their preferences'
+        : 'Top items chosen from their shopping history and similar customers';
+      document.getElementById('cold-start-name').textContent = customer.name;
+      document.getElementById('cold-start-banner').classList.toggle('hidden', !isNew);
+
+      const container = document.getElementById('recommendations-container');
+      if (recs.length === 0) {
+        container.innerHTML = `
+          <div class="my-4 rounded-xl border border-line bg-subtle/50 p-8 text-center">
+            <p class="text-sm font-semibold text-ink">${customer.name} has tried everything in our catalog!</p>
+            <p class="mt-1 text-xs text-ink-muted">Reset the demo or switch to another shopper to explore more recommendations.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = recs.map((rec, idx) => `
+        <article class="py-5 first:pt-4 last:pb-2">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="flex items-start gap-3.5">
+              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-subtle font-mono tabular-nums text-xs font-bold text-ink">${idx + 1}</span>
+              <div>
+                <h3 class="font-display text-base font-semibold text-ink">${rec.product.name}</h3>
+                <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+                  <span>${rec.product.category}</span>
+                  <span>·</span>
+                  <span class="font-mono tabular-nums font-semibold text-ink">$${rec.product.price}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-4 sm:justify-end">
+              <div class="text-left sm:text-right">
+                <div class="font-mono tabular-nums text-sm font-bold text-brand-600 dark:text-brand-300">${rec.matchPct}% Match</div>
+                <div class="text-[11px] text-ink-muted">Confidence</div>
+              </div>
+              <button type="button" onclick="simulatePurchase('${rec.product.id}')" class="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3.5 py-2 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-600 hover:text-white hover:border-brand-600 whitespace-nowrap shrink-0 dark:border-brand-700/60 dark:bg-brand-950/60 dark:text-brand-200 dark:hover:bg-brand-600 dark:hover:text-white">
+                <i data-lucide="shopping-cart" class="h-3.5 w-3.5"></i>
+                Add to Cart
+              </button>
+            </div>
+          </div>
+          <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-subtle">
+            <div class="h-full rounded-full bg-brand-600 transition-all duration-300 dark:bg-brand-500" style="width:${rec.matchPct}%"></div>
+          </div>
+          <p class="mt-2.5 flex items-start gap-1.5 text-xs text-ink-muted">
+            <i data-lucide="info" class="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-70"></i>
+            <span>${rec.reason}</span>
+          </p>
+        </article>`).join('');
+    }
+
+    function renderInsights() {
+      const customer = CUSTOMERS.find((c) => c.id === state.selectedCustomerId);
+      document.getElementById('grid-highlight-name').textContent = customer.name;
+      document.getElementById('raw-row-count').textContent = `${state.rawTransactions.length} records`;
+      document.getElementById('cleaned-row-count').textContent = `${state.cleanedInteractions.length} pairs`;
+
+      document.getElementById('matrix-table-head').innerHTML = `
+        <tr>
+          <th class="sticky left-0 z-10 border-r border-line bg-subtle px-4 py-3 text-left font-semibold">Shopper</th>
+          ${PRODUCTS.map((p) => `<th class="min-w-[120px] px-3 py-2.5 font-medium"><div class="mx-auto max-w-[115px] truncate text-ink" title="${p.name}">${p.name}</div><div class="mt-0.5 text-[10px] text-ink-muted">${p.category}</div></th>`).join('')}
+        </tr>`;
+
+      document.getElementById('matrix-table-body').innerHTML = CUSTOMERS.map((c) => {
+        const isCurrent = c.id === customer.id;
+        return `
+          <tr class="${isCurrent ? 'bg-brand-50/50 dark:bg-brand-950/30' : ''}">
+            <td class="sticky left-0 z-10 border-r border-line px-4 py-3 text-left font-semibold ${isCurrent ? 'bg-brand-600 text-white' : 'bg-card text-ink'}">
+              <div class="whitespace-nowrap">${c.name}</div>
+              <div class="text-[11px] font-normal ${isCurrent ? 'text-brand-100' : 'text-ink-muted'}">${c.id}</div>
+            </td>
+            ${PRODUCTS.map((p) => {
+              const cell = state.interactionMatrix[c.id][p.id];
+              let cls = 'bg-subtle/40 text-ink-muted';
+              if (cell.qty > 0) {
+                if (cell.interestScore >= 4.3) cls = 'bg-brand-600 text-white font-semibold';
+                else if (cell.interestScore >= 3.0) cls = 'bg-brand-200 text-brand-950 font-semibold';
+                else cls = 'bg-brand-100 text-brand-900 font-medium';
+              }
+              return `<td class="border-r border-line p-2 last:border-r-0"><div class="rounded-md px-2 py-1.5 font-mono tabular-nums text-xs ${cls}">${cell.qty > 0 ? `${cell.interestScore.toFixed(1)} (${cell.qty})` : '—'}</div></td>`;
+            }).join('')}
+          </tr>`;
+      }).join('');
+
+      document.getElementById('cleaned-table-body').innerHTML = state.cleanedInteractions.map((item) => {
+        const cust = CUSTOMERS.find((c) => c.id === item.customerId);
+        return `
+          <tr class="${item.customerId === customer.id ? 'bg-brand-50/50 dark:bg-brand-950/30' : 'hover:bg-subtle/50'}">
+            <td class="px-4 py-2.5 font-medium text-ink">${cust ? cust.name : item.customerId}</td>
+            <td class="px-4 py-2.5 text-ink">${item.productName}</td>
+            <td class="px-4 py-2.5 text-ink-muted">${item.category}</td>
+            <td class="px-4 py-2.5 text-right font-mono tabular-nums font-semibold text-ink">${item.purchaseCount}</td>
+            <td class="px-4 py-2.5 text-right font-mono tabular-nums font-bold text-brand-600 dark:text-brand-300">${item.interestScore.toFixed(2)}</td>
+          </tr>`;
+      }).join('');
+
+      document.getElementById('raw-table-body').innerHTML = state.rawTransactions.slice().reverse().map((row) => {
+        const removed = row.status.includes('Removed');
+        const prod = PRODUCTS.find((p) => p.id === row.productId);
+        const cust = CUSTOMERS.find((c) => c.id === row.customerId);
+        return `
+          <tr class="${removed ? 'bg-rose-50/60 text-ink-muted dark:bg-rose-950/20' : 'text-ink hover:bg-subtle/50'}">
+            <td class="px-4 py-2.5 font-mono tabular-nums font-medium">${row.invoice}</td>
+            <td class="px-4 py-2.5">${cust ? cust.name : '<span class="font-medium text-rose-600">Missing</span>'}</td>
+            <td class="px-4 py-2.5">${prod ? prod.name : row.productId}</td>
+            <td class="px-4 py-2.5 text-right font-mono tabular-nums">${row.qty}</td>
+            <td class="px-4 py-2.5 font-mono tabular-nums text-ink-muted">${row.timestamp}</td>
+            <td class="px-4 py-2.5"><span class="text-xs font-medium ${removed ? 'text-rose-700 dark:text-rose-400' : 'text-brand-600 dark:text-brand-300'}">${row.status}</span></td>
+          </tr>`;
+      }).join('');
+    }
+
+    async function renderClusterMap() {
+      if (state.activeTab !== 'map') return;
+      const customer = CUSTOMERS.find((c) => c.id === state.selectedCustomerId);
+      let products = PRODUCTS.map((p) => ({ ...p, ...(CLIENT_FALLBACK_COORDS[p.id] || { x: 50, y: 50 }) }));
+      const row = state.interactionMatrix[customer.id] || {};
+      const bought = Object.keys(row).filter((pid) => row[pid].qty > 0);
+      let cx = 50, cy = 50;
+      if (bought.length > 0) {
+        let wx = 0, wy = 0, tw = 0;
+        bought.forEach((pid) => {
+          const coords = CLIENT_FALLBACK_COORDS[pid];
+          const w = row[pid].interestScore || 1;
+          if (coords) { wx += coords.x * w; wy += coords.y * w; tw += w; }
+        });
+        if (tw > 0) { cx = Math.round((wx / tw) * 10) / 10; cy = Math.round((wy / tw) * 10) / 10; }
+      }
+      if (state.isBackendConnected) {
+        try {
+          const res = await fetch(`/api/latent-space?customer_id=${customer.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.products) && data.customer) {
+              products = data.products; cx = data.customer.x; cy = data.customer.y;
             }
+          }
+        } catch {}
+      }
+      state.mapCache = products;
 
-            document.getElementById('log-final-loss').innerText = currentLoss.toFixed(5);
-            document.getElementById('log-w1').innerText = (-1.8 - (lr * 0.1)).toFixed(3);
-            document.getElementById('log-w2').innerText = (+2.45 + (lr * 0.05)).toFixed(3);
-            document.getElementById('log-b').innerText = (-0.48 - (lr * 0.02)).toFixed(3);
-        }
+      const recs = await getActiveRecommendations();
+      const recIds = recs.slice(0, 3).map((r) => r.product.id);
 
-        window.onload = function() {
-            const ctxGauge = document.getElementById('chart-gauge').getContext('2d');
-            gaugeChart = new Chart(ctxGauge, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Low Risk', 'Medium Risk', 'High Risk'],
-                    datasets: [{
-                        data: [35, 30, 35],
-                        backgroundColor: ['#f59e0b', '#f97316', '#f43f5e'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    rotation: -90,
-                    circumference: 180,
-                    cutout: '72%',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    }
-                }
-            });
+      document.getElementById('svg-rec-lines').innerHTML = recIds.map((pid, idx) => {
+        const prod = products.find((p) => p.id === pid);
+        if (!prod) return '';
+        const scx = cx * 8, scy = cy * 3.8, spx = prod.x * 8, spy = prod.y * 3.8;
+        return `<line x1="${scx}" y1="${scy}" x2="${spx}" y2="${spy}" stroke="var(--brand-500)" stroke-width="1.8" stroke-dasharray="6 4" opacity="0.8" /><text x="${(scx + spx) / 2}" y="${(scy + spy) / 2 - 6}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--brand-500)">#${idx + 1}</text>`;
+      }).join('');
 
-            const ctxWeights = document.getElementById('chart-weights').getContext('2d');
-            weightChart = new Chart(ctxWeights, {
-                type: 'bar',
-                data: {
-                    labels: ['Income Effect', 'DTI Effect', 'History Effect'],
-                    datasets: [{
-                        label: 'Weight Contribution',
-                        data: [-1.2, 1.05, -0.175],
-                        backgroundColor: ['#f59e0b', '#f43f5e', '#fbbf24']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } },
-                        x: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } }
-                    }
-                }
-            });
+      document.getElementById('svg-product-nodes').innerHTML = products.map((p) => {
+        const color = p.category.includes('Tech') ? '#3b82f6' : p.category.includes('Kitchen') ? '#c26a28' : '#2d6a4f';
+        const isRec = recIds.includes(p.id);
+        const spx = p.x * 8, spy = p.y * 3.8;
+        return `<g class="cursor-pointer" onclick="showMapPopover('${p.id}', ${p.x}, ${p.y})">${isRec ? `<circle cx="${spx}" cy="${spy}" r="14" fill="${color}" opacity="0.22" />` : ''}<circle cx="${spx}" cy="${spy}" r="8" fill="${color}" stroke="#ffffff" stroke-width="2" /><text x="${spx}" y="${spy + 19}" text-anchor="middle" font-size="10.5" font-weight="600" fill="currentColor" class="text-ink pointer-events-none">${p.name.split(' ').slice(0, 2).join(' ')}</text></g>`;
+      }).join('');
 
-            const ctxLoss = document.getElementById('chart-loss').getContext('2d');
-            lossChart = new Chart(ctxLoss, {
-                type: 'line',
-                data: {
-                    labels: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-                    datasets: [{
-                        label: 'Loss J(W)',
-                        data: [0.69315, 0.582, 0.491, 0.421, 0.372, 0.338, 0.315, 0.301, 0.292, 0.285, 0.281],
-                        borderColor: '#f59e0b',
-                        tension: 0.3,
-                        fill: true,
-                        backgroundColor: 'rgba(245, 158, 11, 0.08)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } },
-                        x: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } }
-                    }
-                }
-            });
+      document.getElementById('svg-customer-beacon').innerHTML = `<g><circle cx="${cx * 8}" cy="${cy * 3.8}" r="18" fill="var(--brand-500)" opacity="0.2" /><circle cx="${cx * 8}" cy="${cy * 3.8}" r="10" fill="var(--brand-600)" stroke="#ffffff" stroke-width="2.5" /><text x="${cx * 8}" y="${cy * 3.8 - 16}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--brand-500)">${customer.name.split(' ')[0]}</text></g>`;
+    }
 
-            const ctxDist = document.getElementById('chart-dist').getContext('2d');
-            distChart = new Chart(ctxDist, {
-                type: 'line',
-                data: {
-                    labels: ['$20k', '$35k', '$50k', '$65k', '$80k', '$95k', '$110k'],
-                    datasets: [{
-                        label: 'Normal Distribution N(μ, σ²)',
-                        data: [0.02, 0.15, 0.40, 0.25, 0.10, 0.03, 0.01],
-                        borderColor: '#fbbf24',
-                        tension: 0.4,
-                        fill: true,
-                        backgroundColor: 'rgba(251, 191, 36, 0.1)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } },
-                        x: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } }
-                    }
-                }
-            });
+    function showMapPopover(pid, x, y) {
+      const card = document.getElementById('map-hover-card');
+      const prod = (state.mapCache || PRODUCTS).find((p) => p.id === pid);
+      if (!card || !prod) return;
+      card.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <div class="font-display text-xs font-bold text-ink">${prod.name}</div>
+            <div class="mt-0.5 text-[11px] text-ink-muted">${prod.category} · <span class="font-mono tabular-nums">$${prod.price}</span></div>
+          </div>
+          <button type="button" onclick="document.getElementById('map-hover-card').classList.add('hidden')" aria-label="Close" class="text-ink-muted hover:text-ink">✕</button>
+        </div>
+        <div class="mt-3 flex justify-end">
+          <button type="button" onclick="simulatePurchase('${prod.id}'); document.getElementById('map-hover-card').classList.add('hidden');" class="inline-flex items-center gap-1 rounded-md bg-brand-600 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-brand-700">
+            <i data-lucide="shopping-cart" class="h-3 w-3"></i> Buy Now
+          </button>
+        </div>`;
+      card.style.left = `${Math.min(68, Math.max(4, x))}%`;
+      card.style.top = `${Math.min(66, Math.max(4, y))}%`;
+      card.classList.remove('hidden');
+      lucide.createIcons();
+    }
 
-            updateScorer();
-        };
-    </script>
+    function switchInsightTab(tab) {
+      state.activeTab = tab;
+      ['grid', 'map', 'interests', 'orders'].forEach((t) => {
+        const view = document.getElementById(`insight-view-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        const active = t === tab;
+        view.classList.toggle('hidden', !active);
+        btn.className = active
+          ? 'rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 bg-card text-ink shadow-xs'
+          : 'rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 text-ink-muted hover:text-ink';
+      });
+      if (tab === 'map') renderClusterMap();
+    }
+
+    function showToast(text) {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = 'pointer-events-auto rounded-lg border border-line bg-ink px-4 py-2.5 text-xs font-medium text-card shadow-lg';
+      el.textContent = text;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    async function selectCustomer(id) {
+      state.selectedCustomerId = id;
+      await refreshAllViews();
+    }
+
+    async function simulatePurchase(productId) {
+      const customer = CUSTOMERS.find((c) => c.id === state.selectedCustomerId);
+      const product = PRODUCTS.find((p) => p.id === productId);
+      if (!product) return;
+      if (state.isBackendConnected) {
+        try {
+          await fetch('/api/purchase', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customer_id: customer.id, product_id: product.id, quantity: 1 }),
+          });
+        } catch {}
+      }
+      const now = new Date();
+      state.rawTransactions.push({
+        invoice: `INV-${Math.floor(8900 + Math.random() * 999)}`,
+        customerId: customer.id,
+        productId: product.id,
+        qty: 1,
+        timestamp: `${now.toISOString().slice(0, 10)} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        status: 'Simulated',
+      });
+      runDataPreparationPipeline();
+      await refreshAllViews();
+      showToast(`Added "${product.name}" for ${customer.name}. Picks updated.`);
+    }
+
+    async function resetSimulation() {
+      if (state.isBackendConnected) {
+        try { await fetch('/api/reset', { method: 'POST' }); } catch {}
+      }
+      state.rawTransactions = JSON.parse(JSON.stringify(INITIAL_RAW_TRANSACTIONS));
+      runDataPreparationPipeline();
+      await refreshAllViews();
+      showToast('Demo orders restored to initial state.');
+    }
+
+    async function refreshAllViews() {
+      renderCustomerCards();
+      renderSidebar();
+      await renderRecommendations();
+      renderInsights();
+      if (state.activeTab === 'map') await renderClusterMap();
+      lucide.createIcons();
+    }
+
+    document.getElementById('top-n-slider').addEventListener('input', async (e) => {
+      state.topN = parseInt(e.target.value, 10);
+      document.getElementById('top-n-value').textContent = state.topN;
+      await renderRecommendations();
+      if (state.activeTab === 'map') await renderClusterMap();
+      lucide.createIcons();
+    });
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      applyTheme(state.themeKey);
+      applyDarkMode(state.isDarkMode);
+      await checkBackend();
+      runDataPreparationPipeline();
+      await refreshAllViews();
+    });
+  </script>
 </body>
 </html>
